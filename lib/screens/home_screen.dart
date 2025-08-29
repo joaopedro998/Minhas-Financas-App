@@ -1,6 +1,5 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
-// CORRETO
 import 'package:intl/intl.dart';
 import 'package:flutter_application_1/models/transaction_model.dart';
 import 'package:flutter_application_1/screens/add_transaction_screen.dart';
@@ -20,12 +19,35 @@ class HomeScreen extends StatelessWidget {
       ),
       body: Column(
         children: [
-          // --- WIDGET DA META (COM BOTÃO DE EDITAR) ---
+          // --- WIDGET DA META ---
           StreamBuilder<DocumentSnapshot>(
             stream: firestoreService.getGoalStream(),
             builder: (context, snapshot) {
-              if (!snapshot.hasData)
-                return const Center(child: CircularProgressIndicator());
+              if (snapshot.connectionState == ConnectionState.waiting) {
+                return const Padding(
+                  padding: EdgeInsets.all(16.0),
+                  child: Center(child: CircularProgressIndicator()),
+                );
+              }
+
+              if (!snapshot.hasData || !snapshot.data!.exists) {
+                return Card(
+                  margin: const EdgeInsets.all(16.0),
+                  child: Padding(
+                    padding: const EdgeInsets.all(16.0),
+                    child: Column(
+                      children: [
+                        const Text('Nenhuma meta definida ainda.'),
+                        TextButton(
+                          onPressed: () =>
+                              _showSetGoalDialog(context, firestoreService),
+                          child: const Text('DEFINIR UMA META'),
+                        ),
+                      ],
+                    ),
+                  ),
+                );
+              }
 
               final goalData = snapshot.data!.data() as Map<String, dynamic>;
               final valorAtual = (goalData['valorAtual'] ?? 0).toDouble();
@@ -45,7 +67,6 @@ class HomeScreen extends StatelessWidget {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      // MUDANÇA: Adicionamos um botão ao lado do título
                       Row(
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
@@ -57,7 +78,6 @@ class HomeScreen extends StatelessWidget {
                               color: Colors.blue,
                             ),
                           ),
-                          // BOTÃO PARA ABRIR A JANELA DE DIÁLOGO
                           TextButton.icon(
                             onPressed: () =>
                                 _showSetGoalDialog(context, firestoreService),
@@ -101,19 +121,23 @@ class HomeScreen extends StatelessWidget {
             },
           ),
 
-          // --- LISTA DE TRANSAÇÕES ---
+          // --- LISTA DE TRANSAÇÕES (CÓDIGO COMPLETO) ---
           Expanded(
             child: StreamBuilder<QuerySnapshot>(
               stream: firestoreService.getTransactionsStream(),
               builder: (context, snapshot) {
-                // ... O código da lista continua exatamente o mesmo de antes ...
-                if (snapshot.connectionState == ConnectionState.waiting)
+                if (snapshot.connectionState == ConnectionState.waiting) {
                   return const Center(child: CircularProgressIndicator());
-                if (!snapshot.hasData || snapshot.data!.docs.isEmpty)
+                }
+
+                if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
                   return const Center(
                     child: Text('Nenhuma transação adicionada.'),
                   );
+                }
+
                 final transactions = snapshot.data!.docs;
+
                 return ListView.builder(
                   itemCount: transactions.length,
                   itemBuilder: (context, index) {
@@ -172,7 +196,7 @@ class HomeScreen extends StatelessWidget {
     );
   }
 
-  // --- NOVA FUNÇÃO: Janela de Diálogo para Definir a Meta ---
+  // --- Janela de Diálogo para Definir a Meta ---
   void _showSetGoalDialog(
     BuildContext context,
     FirestoreService firestoreService,
@@ -214,18 +238,14 @@ class HomeScreen extends StatelessWidget {
             ),
             ElevatedButton(
               onPressed: () async {
-                // Valida o formulário antes de salvar
                 if (goalFormKey.currentState!.validate()) {
                   final newGoal = double.parse(
                     goalController.text.replaceAll(',', '.'),
                   );
                   try {
-                    // Chama a nova função do nosso serviço
                     await firestoreService.setNewGoal(newGoal);
-                    if (context.mounted)
-                      Navigator.pop(context); // Fecha a janela
+                    if (context.mounted) Navigator.pop(context);
                   } catch (e) {
-                    // Mostra um erro se algo der errado
                     ScaffoldMessenger.of(context).showSnackBar(
                       SnackBar(content: Text("Erro ao salvar meta: $e")),
                     );
