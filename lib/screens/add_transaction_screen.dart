@@ -1,44 +1,52 @@
-// lib/screens/add_transaction_screen.dart
-
 import 'package:flutter/material.dart';
-// Import corrigido com o nome do seu projeto
+import 'package:flutter_application_1/models/transaction_model.dart';
 import 'package:flutter_application_1/services/firestore_service.dart';
 
-// --- PARTE 1: A "Carcaça" do Widget ---
-// Esta é a parte fixa.
+// A "Carcaça" do Widget agora pode receber uma transação para editar.
 class AddTransactionScreen extends StatefulWidget {
-  const AddTransactionScreen({super.key});
+  // A transação é opcional. Se for nula, estamos criando. Se não, estamos editando.
+  final TransactionModel? transaction;
 
-  // Este é o método que estava faltando.
-  // Ele diz ao Flutter como criar a parte dinâmica (o State) deste widget.
+  const AddTransactionScreen({super.key, this.transaction});
+
   @override
   State<AddTransactionScreen> createState() => _AddTransactionScreenState();
 }
 
-// --- PARTE 2: O "Motor" do Widget ---
-// Esta é a parte dinâmica, que guarda as informações e constrói a tela.
 class _AddTransactionScreenState extends State<AddTransactionScreen> {
-  // Chave para identificar e validar nosso formulário
   final _formKey = GlobalKey<FormState>();
-
-  // Controladores para pegar os valores dos campos de texto
   final _descriptionController = TextEditingController();
   final _amountController = TextEditingController();
-  final _personController =
-      TextEditingController(); // Controlador para o campo "Pessoa"
+  final _personController = TextEditingController();
 
-  // Variável para guardar o tipo da transação (receita ou despesa)
-  String _transactionType = 'despesa'; // Começa como despesa por padrão
-
-  // Instância do nosso serviço do Firestore
+  String _transactionType = 'despesa';
   final FirestoreService _firestoreService = FirestoreService();
+
+  // Variável para saber se estamos no modo de edição.
+  bool get _isEditing => widget.transaction != null;
+
+  // O método initState() é chamado UMA VEZ quando a tela é criada.
+  // É o lugar perfeito para preencher o formulário se estivermos editando.
+  @override
+  void initState() {
+    super.initState();
+
+    if (_isEditing) {
+      // Se estamos editando, preenchemos os campos com os dados da transação existente.
+      final transaction = widget.transaction!;
+      _descriptionController.text = transaction.description;
+      _amountController.text = transaction.amount.toString();
+      _personController.text = transaction.person;
+      _transactionType = transaction.type;
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Adicionar Transação'),
-        // A cor da barra muda dependendo do tipo da transação
+        // O título da tela agora é dinâmico.
+        title: Text(_isEditing ? 'Editar Transação' : 'Adicionar Transação'),
         backgroundColor: _transactionType == 'receita'
             ? Colors.green
             : Colors.red,
@@ -46,13 +54,11 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
       body: Padding(
         padding: const EdgeInsets.all(16.0),
         child: Form(
-          key: _formKey, // Associando a chave ao formulário
-          // Usamos um SingleChildScrollView para a tela não quebrar quando o teclado aparecer
+          key: _formKey,
           child: SingleChildScrollView(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                // --- Seletor de Tipo (Receita/Despesa) ---
                 SegmentedButton<String>(
                   segments: const <ButtonSegment<String>>[
                     ButtonSegment<String>(
@@ -68,16 +74,12 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
                   ],
                   selected: {_transactionType},
                   onSelectionChanged: (Set<String> newSelection) {
-                    // Atualiza a tela quando o usuário troca a seleção
                     setState(() {
                       _transactionType = newSelection.first;
                     });
                   },
                 ),
-
                 const SizedBox(height: 20),
-
-                // --- Campo de Descrição ---
                 TextFormField(
                   controller: _descriptionController,
                   decoration: const InputDecoration(
@@ -91,10 +93,7 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
                     return null;
                   },
                 ),
-
                 const SizedBox(height: 16),
-
-                // --- NOVO CAMPO: Pessoa ---
                 TextFormField(
                   controller: _personController,
                   decoration: const InputDecoration(
@@ -108,10 +107,7 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
                     return null;
                   },
                 ),
-
                 const SizedBox(height: 16),
-
-                // --- Campo de Valor ---
                 TextFormField(
                   controller: _amountController,
                   decoration: const InputDecoration(
@@ -131,10 +127,7 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
                     return null;
                   },
                 ),
-
                 const SizedBox(height: 24),
-
-                // --- Botão de Salvar ---
                 ElevatedButton(
                   onPressed: _saveTransaction,
                   style: ElevatedButton.styleFrom(
@@ -156,27 +149,35 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
     );
   }
 
-  // Função chamada quando o botão "Salvar" é pressionado
+  // A lógica de salvar agora é mais inteligente.
   void _saveTransaction() async {
-    // 1. Validar o formulário para ver se não há erros
     if (_formKey.currentState!.validate()) {
-      // 2. Pegar os valores dos campos
       final description = _descriptionController.text;
       final amount = double.parse(_amountController.text.replaceAll(',', '.'));
       final type = _transactionType;
-      final person = _personController.text; // Pegando o valor do novo campo
+      final person = _personController.text;
 
-      // 3. Chamar o serviço do Firestore para salvar os dados
       try {
-        // Agora passamos o nome da pessoa para a função de salvar
-        await _firestoreService.addTransaction(
-          description,
-          amount,
-          type,
-          person,
-        );
+        if (_isEditing) {
+          // Se estamos editando, chamamos o método de ATUALIZAR.
+          final docId = widget.transaction!.id;
+          await _firestoreService.updateTransaction(
+            docId,
+            description,
+            amount,
+            type,
+            person,
+          );
+        } else {
+          // Se não, chamamos o método de ADICIONAR, como antes.
+          await _firestoreService.addTransaction(
+            description,
+            amount,
+            type,
+            person,
+          );
+        }
 
-        // 4. Mostrar mensagem de sucesso e fechar a tela
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(content: Text('Transação salva com sucesso!')),
@@ -184,7 +185,6 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
           Navigator.pop(context); // Volta para a tela anterior
         }
       } catch (e) {
-        // 5. Se der erro, mostrar uma mensagem de erro
         if (mounted) {
           ScaffoldMessenger.of(
             context,
@@ -194,12 +194,11 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
     }
   }
 
-  // Limpa os controladores quando o widget é descartado para evitar vazamento de memória
   @override
   void dispose() {
     _descriptionController.dispose();
     _amountController.dispose();
-    _personController.dispose(); // Limpando o novo controlador
+    _personController.dispose();
     super.dispose();
   }
 }
