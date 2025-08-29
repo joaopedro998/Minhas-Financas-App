@@ -2,10 +2,12 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 
 class FirestoreService {
   final FirebaseFirestore _db = FirebaseFirestore.instance;
+  // Referência para o documento da meta
+  final DocumentReference _goalDocument = FirebaseFirestore.instance
+      .collection('metas')
+      .doc('meta_principal');
 
-  // --- Funções para Transações ---
-
-  // Adicionar uma nova transação
+  // --- Funções para Transações (não mudam) ---
   Future<void> addTransaction(
     String description,
     double amount,
@@ -22,7 +24,6 @@ class FirestoreService {
     return _db.collection('transactions').add(transactionData);
   }
 
-  // NOVO MÉTODO: Atualizar uma transação existente
   Future<void> updateTransaction(
     String docId,
     String description,
@@ -35,18 +36,35 @@ class FirestoreService {
       'amount': amount,
       'type': type,
       'person': person,
-      'date':
-          Timestamp.now(), // Atualizamos a data para a da última modificação
+      'date': Timestamp.now(),
     };
-    // Em vez de .add(), usamos .doc(docId).update() para modificar um documento específico
     return _db.collection('transactions').doc(docId).update(transactionData);
   }
 
-  // Obter um "fluxo" de transações em tempo real
   Stream<QuerySnapshot> getTransactionsStream() {
     return _db
         .collection('transactions')
         .orderBy('date', descending: true)
         .snapshots();
+  }
+
+  // --- Funções para a Meta ---
+
+  // Obter um "fluxo" de dados da meta em tempo real
+  Stream<DocumentSnapshot> getGoalStream() {
+    return _goalDocument.snapshots();
+  }
+
+  // Adicionar um valor ao total da meta
+  Future<void> addValueToGoal(double amount) {
+    return _goalDocument.update({'valorAtual': FieldValue.increment(amount)});
+  }
+
+  // NOVO MÉTODO: Definir uma nova meta e zerar o progresso
+  Future<void> setNewGoal(double newGoalValue) {
+    return _goalDocument.update({
+      'valorMeta': newGoalValue,
+      'valorAtual': 0, // Zera o progresso atual ao definir uma nova meta
+    });
   }
 }
