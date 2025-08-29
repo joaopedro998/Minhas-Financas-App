@@ -4,6 +4,7 @@ import 'package:intl/intl.dart';
 import 'package:flutter_application_1/models/transaction_model.dart';
 import 'package:flutter_application_1/screens/add_transaction_screen.dart';
 import 'package:flutter_application_1/services/firestore_service.dart';
+import 'package:flutter_application_1/theme_notifier.dart'; // Importe o notifier
 
 class HomeScreen extends StatelessWidget {
   const HomeScreen({super.key});
@@ -11,16 +12,27 @@ class HomeScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final FirestoreService firestoreService = FirestoreService();
+    final isDarkMode = Theme.of(context).brightness == Brightness.dark;
 
     return Scaffold(
       appBar: AppBar(
         title: const Text('Minhas Finanças'),
-        backgroundColor: Colors.indigo, // Nova cor
+        backgroundColor: Colors.indigo,
         elevation: 0,
+        actions: [
+          IconButton(
+            icon: Icon(isDarkMode ? Icons.light_mode : Icons.dark_mode),
+            onPressed: () {
+              themeNotifier.value = isDarkMode
+                  ? ThemeMode.light
+                  : ThemeMode.dark;
+            },
+          ),
+        ],
       ),
       body: Column(
         children: [
-          // --- WIDGET DA META ---
+          // --- WIDGET DA META (CÓDIGO COMPLETO) ---
           StreamBuilder<DocumentSnapshot>(
             stream: firestoreService.getGoalStream(),
             builder: (context, snapshot) {
@@ -30,7 +42,6 @@ class HomeScreen extends StatelessWidget {
                   child: Center(child: CircularProgressIndicator()),
                 );
               }
-
               if (!snapshot.hasData || !snapshot.data!.exists) {
                 return Card(
                   margin: const EdgeInsets.all(16.0),
@@ -49,7 +60,6 @@ class HomeScreen extends StatelessWidget {
                   ),
                 );
               }
-
               final goalData = snapshot.data!.data() as Map<String, dynamic>;
               final valorAtual = (goalData['valorAtual'] ?? 0).toDouble();
               final valorMeta = (goalData['valorMeta'] ?? 1).toDouble();
@@ -59,7 +69,6 @@ class HomeScreen extends StatelessWidget {
                 locale: 'pt_BR',
                 symbol: 'R\$',
               );
-
               return Card(
                 margin: const EdgeInsets.all(16.0),
                 elevation: 4,
@@ -83,11 +92,10 @@ class HomeScreen extends StatelessWidget {
                           ),
                           PopupMenuButton<String>(
                             onSelected: (value) {
-                              if (value == 'nova') {
+                              if (value == 'nova')
                                 _showSetGoalDialog(context, firestoreService);
-                              } else if (value == 'reiniciar') {
+                              else if (value == 'reiniciar')
                                 firestoreService.resetGoalProgress();
-                              }
                             },
                             itemBuilder: (BuildContext context) =>
                                 <PopupMenuEntry<String>>[
@@ -138,8 +146,7 @@ class HomeScreen extends StatelessWidget {
               );
             },
           ),
-
-          // --- LISTA E RESUMO DE TRANSAÇÕES ---
+          // --- LISTA E RESUMO (CÓDIGO COMPLETO) ---
           Expanded(
             child: StreamBuilder<QuerySnapshot>(
               stream: firestoreService.getTransactionsStream(),
@@ -153,29 +160,23 @@ class HomeScreen extends StatelessWidget {
                       style: TextStyle(color: Colors.grey, fontSize: 16),
                     ),
                   );
-
                 final transactionsDocs = snapshot.data!.docs;
-
-                // --- LÓGICA DE CÁLCULO DO SALDO ---
                 double totalRevenue = 0.0;
                 double totalExpenses = 0.0;
                 for (var doc in transactionsDocs) {
                   final transaction = TransactionModel.fromFirestore(doc);
-                  if (transaction.type == 'receita') {
+                  if (transaction.type == 'receita')
                     totalRevenue += transaction.amount;
-                  } else if (transaction.type == 'despesa') {
+                  else if (transaction.type == 'despesa')
                     totalExpenses += transaction.amount;
-                  }
                 }
                 final balance = totalRevenue - totalExpenses;
                 final formatadorMoeda = NumberFormat.currency(
                   locale: 'pt_BR',
                   symbol: 'R\$',
                 );
-
                 return Column(
                   children: [
-                    // --- CARD DE RESUMO FINANCEIRO ---
                     Card(
                       margin: const EdgeInsets.symmetric(
                         horizontal: 16.0,
@@ -212,9 +213,8 @@ class HomeScreen extends StatelessWidget {
                         ),
                       ),
                     ),
-
-                    const Padding(
-                      padding: EdgeInsets.only(
+                    Padding(
+                      padding: const EdgeInsets.only(
                         left: 20.0,
                         top: 10.0,
                         bottom: 5.0,
@@ -226,14 +226,14 @@ class HomeScreen extends StatelessWidget {
                             style: TextStyle(
                               fontSize: 18,
                               fontWeight: FontWeight.bold,
-                              color: Colors.black54,
+                              color: isDarkMode
+                                  ? Colors.white70
+                                  : Colors.black54,
                             ),
                           ),
                         ],
                       ),
                     ),
-
-                    // --- LISTA DE TRANSAÇÕES ---
                     Expanded(
                       child: ListView.builder(
                         itemCount: transactionsDocs.length,
@@ -336,7 +336,6 @@ class HomeScreen extends StatelessWidget {
     );
   }
 
-  // --- Função Auxiliar para construir os itens do resumo ---
   Widget _buildSummaryItem(
     IconData icon,
     String label,
@@ -361,14 +360,12 @@ class HomeScreen extends StatelessWidget {
     );
   }
 
-  // --- Janela de Diálogo para Definir a Meta ---
   void _showSetGoalDialog(
     BuildContext context,
     FirestoreService firestoreService,
   ) {
     final goalFormKey = GlobalKey<FormState>();
     final goalController = TextEditingController();
-
     showDialog(
       context: context,
       builder: (context) {
