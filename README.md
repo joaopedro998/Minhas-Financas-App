@@ -27,11 +27,3 @@ O objetivo principal é facilitar o gerenciamento financeiro compartilhado (ex: 
 - [Provider](https://pub.dev/packages/provider) — Gerenciamento de estado  
 - [flutterfire_cli](https://firebase.flutter.dev/docs/cli) — Configuração do Firebase no Flutter  
 
----
-
-## 🚀 Como rodar o projeto
-
-### 1. Clonar o repositório
-```bash
-git clone https://github.com/SEU-USUARIO/seu-repo.git
-cd seu-repo
