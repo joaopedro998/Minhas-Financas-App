@@ -12,12 +12,14 @@ class FirestoreService {
     double amount,
     String type,
     String person,
+    String category,
   ) {
     final transactionData = {
       'description': description,
       'amount': amount,
       'type': type,
       'person': person,
+      'category': category, // Adicionado
       'date': Timestamp.now(),
     };
     return _db.collection('transactions').add(transactionData);
@@ -29,18 +31,19 @@ class FirestoreService {
     double amount,
     String type,
     String person,
+    String category,
   ) {
     final transactionData = {
       'description': description,
       'amount': amount,
       'type': type,
       'person': person,
+      'category': category, // Adicionado
       'date': Timestamp.now(),
     };
     return _db.collection('transactions').doc(docId).update(transactionData);
   }
 
-  // NOVO MÉTODO: Deletar uma transação
   Future<void> deleteTransaction(String docId) {
     return _db.collection('transactions').doc(docId).delete();
   }

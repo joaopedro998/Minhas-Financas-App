@@ -4,9 +4,10 @@ class TransactionModel {
   final String id;
   final String description;
   final double amount;
-  final String type; // 'receita' ou 'despesa'
+  final String type;
   final Timestamp date;
-  final String person; // NOVO CAMPO
+  final String person;
+  final String category; // NOVO CAMPO
 
   TransactionModel({
     required this.id,
@@ -14,7 +15,8 @@ class TransactionModel {
     required this.amount,
     required this.type,
     required this.date,
-    required this.person, // NOVO CAMPO
+    required this.person,
+    required this.category, // NOVO CAMPO
   });
 
   factory TransactionModel.fromFirestore(DocumentSnapshot doc) {
@@ -25,8 +27,9 @@ class TransactionModel {
       amount: (data['amount'] ?? 0.0).toDouble(),
       type: data['type'] ?? 'despesa',
       date: data['date'] ?? Timestamp.now(),
-      // Se o campo 'person' não existir no banco (em dados antigos), usa 'N/A'
-      person: data['person'] ?? 'N/A', // NOVO CAMPO
+      person: data['person'] ?? 'N/A',
+      // Se a transação for antiga e não tiver categoria, definimos como 'Outros'
+      category: data['category'] ?? 'Outros', // NOVO CAMPO
     );
   }
 }

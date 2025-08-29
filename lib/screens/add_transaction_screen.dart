@@ -10,46 +10,61 @@ class AddTransactionScreen extends StatefulWidget {
 }
 
 class _AddTransactionScreenState extends State<AddTransactionScreen> {
-  // AQUI ESTÁ A CORREÇÃO!
-  // As declarações das chaves e controladores precisam estar aqui,
-  // como propriedades da classe State.
   final _formKey = GlobalKey<FormState>();
   final _descriptionController = TextEditingController();
   final _amountController = TextEditingController();
   final _personController = TextEditingController();
 
   String _transactionType = 'despesa';
+  String? _selectedCategory; // Variável para guardar a categoria selecionada
   final FirestoreService _firestoreService = FirestoreService();
   bool get _isEditing => widget.transaction != null;
+
+  // Lista de categorias disponíveis
+  final List<String> _categories = [
+    'Moradia',
+    'Alimentação',
+    'Transporte',
+    'Saúde',
+    'Lazer',
+    'Educação',
+    'Vestuário',
+    'Outros',
+  ];
 
   @override
   void initState() {
     super.initState();
     if (_isEditing) {
-      final transaction = widget.transaction!;
-      _descriptionController.text = transaction.description;
-      _amountController.text = transaction.amount.toString();
-      _personController.text = transaction.person;
-      _transactionType = transaction.type;
+      final t = widget.transaction!;
+      _descriptionController.text = t.description;
+      _amountController.text = t.amount.toString();
+      _personController.text = t.person;
+      _transactionType = t.type;
+      // Preenche a categoria no modo de edição, se for uma despesa
+      if (t.type == 'despesa') {
+        _selectedCategory = t.category;
+      }
     }
   }
 
   @override
   Widget build(BuildContext context) {
-    final bool isGoalOperation =
-        _transactionType == 'guardar' || _transactionType == 'usar_meta';
+    final bool isExpense = _transactionType == 'despesa';
+    final bool showPersonField = ![
+      'guardar',
+      'usar_meta',
+    ].contains(_transactionType);
 
     Color appBarColor;
-    if (_transactionType == 'receita') {
+    if (_transactionType == 'receita')
       appBarColor = Colors.green;
-    } else if (_transactionType == 'despesa') {
+    else if (_transactionType == 'despesa')
       appBarColor = Colors.red;
-    } else if (_transactionType == 'guardar') {
+    else if (_transactionType == 'guardar')
       appBarColor = Colors.blue;
-    } else {
-      // usar_meta
+    else
       appBarColor = Colors.orange;
-    }
 
     return Scaffold(
       appBar: AppBar(
@@ -101,7 +116,33 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
                       v == null || v.isEmpty ? 'Insira uma descrição' : null,
                 ),
                 const SizedBox(height: 16),
-                if (!isGoalOperation)
+
+                // O campo de categoria só aparece se for uma despesa
+                if (isExpense)
+                  DropdownButtonFormField<String>(
+                    value: _selectedCategory,
+                    hint: const Text('Selecione uma Categoria'),
+                    decoration: const InputDecoration(
+                      border: OutlineInputBorder(),
+                    ),
+                    items: _categories.map((String category) {
+                      return DropdownMenuItem<String>(
+                        value: category,
+                        child: Text(category),
+                      );
+                    }).toList(),
+                    onChanged: (newValue) {
+                      setState(() {
+                        _selectedCategory = newValue;
+                      });
+                    },
+                    validator: (value) =>
+                        value == null ? 'Selecione uma categoria' : null,
+                  ),
+
+                const SizedBox(height: 16),
+
+                if (showPersonField)
                   TextFormField(
                     controller: _personController,
                     decoration: const InputDecoration(
@@ -111,6 +152,7 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
                     validator: (v) =>
                         v == null || v.isEmpty ? 'Insira uma pessoa' : null,
                   ),
+
                 const SizedBox(height: 16),
                 TextFormField(
                   controller: _amountController,
@@ -160,6 +202,7 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
       final person = _personController.text.isEmpty
           ? 'N/A'
           : _personController.text;
+      final category = type == 'despesa' ? _selectedCategory! : 'N/A';
 
       try {
         if (type == 'guardar') {
@@ -171,6 +214,7 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
             amount,
             'despesa',
             'Meta',
+            'Outros',
           );
         } else if (_isEditing) {
           final docId = widget.transaction!.id;
@@ -180,6 +224,7 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
             amount,
             type,
             person,
+            category,
           );
         } else {
           await _firestoreService.addTransaction(
@@ -187,6 +232,7 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
             amount,
             type,
             person,
+            category,
           );
         }
 
