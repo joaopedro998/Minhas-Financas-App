@@ -8,18 +8,22 @@ class FirestoreService {
 
   // Adicionar uma nova transação
   Future<void> addTransaction(String description, double amount, String type) {
-    // Cria um mapa com os dados
     final transactionData = {
       'description': description,
       'amount': amount,
       'type': type,
       'date': Timestamp.now(), // Pega a data e hora atual
     };
-
-    // Adiciona o mapa à coleção 'transactions'
-    // Se a coleção não existir, o Firestore cria automaticamente
     return _db.collection('transactions').add(transactionData);
   }
 
-  // TODO: Futuramente, adicionaremos aqui as funções para LER e DELETAR transações.
+  // NOVO MÉTODO: Obter um "fluxo" de transações em tempo real
+  Stream<QuerySnapshot> getTransactionsStream() {
+    // Retorna um "instantâneo" da coleção 'transactions'
+    // Ordenando os documentos pela data, com os mais recentes primeiro.
+    return _db
+        .collection('transactions')
+        .orderBy('date', descending: true)
+        .snapshots();
+  }
 }
