@@ -1,26 +1,31 @@
+// lib/services/firestore_service.dart
+
 import 'package:cloud_firestore/cloud_firestore.dart';
 
 class FirestoreService {
-  // Pega a instância do Cloud Firestore
   final FirebaseFirestore _db = FirebaseFirestore.instance;
 
   // --- Funções para Transações ---
 
-  // Adicionar uma nova transação
-  Future<void> addTransaction(String description, double amount, String type) {
+  // VERSÃO CORRIGIDA: Agora aceita o quarto argumento 'person'
+  Future<void> addTransaction(
+    String description,
+    double amount,
+    String type,
+    String person,
+  ) {
     final transactionData = {
       'description': description,
       'amount': amount,
       'type': type,
-      'date': Timestamp.now(), // Pega a data e hora atual
+      'person': person, // E salva o nome da pessoa no banco de dados
+      'date': Timestamp.now(),
     };
     return _db.collection('transactions').add(transactionData);
   }
 
-  // NOVO MÉTODO: Obter um "fluxo" de transações em tempo real
+  // Esta função já está correta, não precisa mexer
   Stream<QuerySnapshot> getTransactionsStream() {
-    // Retorna um "instantâneo" da coleção 'transactions'
-    // Ordenando os documentos pela data, com os mais recentes primeiro.
     return _db
         .collection('transactions')
         .orderBy('date', descending: true)
