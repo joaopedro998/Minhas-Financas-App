@@ -6,6 +6,7 @@ class TransactionModel {
   final double amount;
   final String type; // 'receita' ou 'despesa'
   final Timestamp date;
+  final String person; // NOVO CAMPO
 
   TransactionModel({
     required this.id,
@@ -13,9 +14,9 @@ class TransactionModel {
     required this.amount,
     required this.type,
     required this.date,
+    required this.person, // NOVO CAMPO
   });
 
-  // Uma função "fábrica" para criar uma transação a partir de um documento do Firestore
   factory TransactionModel.fromFirestore(DocumentSnapshot doc) {
     Map data = doc.data() as Map<String, dynamic>;
     return TransactionModel(
@@ -24,6 +25,8 @@ class TransactionModel {
       amount: (data['amount'] ?? 0.0).toDouble(),
       type: data['type'] ?? 'despesa',
       date: data['date'] ?? Timestamp.now(),
+      // Se o campo 'person' não existir no banco (em dados antigos), usa 'N/A'
+      person: data['person'] ?? 'N/A', // NOVO CAMPO
     );
   }
 }
