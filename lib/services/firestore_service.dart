@@ -13,14 +13,15 @@ class FirestoreService {
     String type,
     String person,
     String category,
+    DateTime transactionDate,
   ) {
     final transactionData = {
       'description': description,
       'amount': amount,
       'type': type,
       'person': person,
-      'category': category, // Adicionado
-      'date': Timestamp.now(),
+      'category': category,
+      'date': Timestamp.fromDate(transactionDate), // Usa a data recebida
     };
     return _db.collection('transactions').add(transactionData);
   }
@@ -32,14 +33,15 @@ class FirestoreService {
     String type,
     String person,
     String category,
+    DateTime transactionDate,
   ) {
     final transactionData = {
       'description': description,
       'amount': amount,
       'type': type,
       'person': person,
-      'category': category, // Adicionado
-      'date': Timestamp.now(),
+      'category': category,
+      'date': Timestamp.fromDate(transactionDate), // Usa a data recebida
     };
     return _db.collection('transactions').doc(docId).update(transactionData);
   }
@@ -48,7 +50,26 @@ class FirestoreService {
     return _db.collection('transactions').doc(docId).delete();
   }
 
-  Stream<QuerySnapshot> getTransactionsStream() {
+  Stream<QuerySnapshot> getTransactionsStreamByMonth(DateTime selectedMonth) {
+    DateTime startOfMonth = DateTime(
+      selectedMonth.year,
+      selectedMonth.month,
+      1,
+    );
+    DateTime endOfMonth = DateTime(
+      selectedMonth.year,
+      selectedMonth.month + 1,
+      1,
+    );
+    return _db
+        .collection('transactions')
+        .where('date', isGreaterThanOrEqualTo: startOfMonth)
+        .where('date', isLessThan: endOfMonth)
+        .orderBy('date', descending: true)
+        .snapshots();
+  }
+
+  Stream<QuerySnapshot> getAllTransactionsStream() {
     return _db
         .collection('transactions')
         .orderBy('date', descending: true)

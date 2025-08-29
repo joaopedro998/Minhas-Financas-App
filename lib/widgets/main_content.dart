@@ -3,19 +3,30 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+import 'package:intl/date_symbol_data_local.dart';
 import 'package:flutter_application_1/models/transaction_model.dart';
 import 'package:flutter_application_1/screens/add_transaction_screen.dart';
 import 'package:flutter_application_1/services/firestore_service.dart';
 import 'package:flutter_application_1/theme_notifier.dart';
 
 class MainContent extends StatelessWidget {
-  const MainContent({super.key});
+  final DateTime selectedMonth;
+  final VoidCallback onPreviousMonth;
+  final VoidCallback onNextMonth;
+
+  const MainContent({
+    super.key,
+    required this.selectedMonth,
+    required this.onPreviousMonth,
+    required this.onNextMonth,
+  });
 
   @override
   Widget build(BuildContext context) {
+    initializeDateFormatting('pt_BR', null);
     final FirestoreService firestoreService = FirestoreService();
-    // AQUI ESTÁ A CORREÇÃO! Trocamos 'Bright.dark' por 'Brightness.dark'
     final isDarkMode = Theme.of(context).brightness == Brightness.dark;
+    final monthFormatter = DateFormat('MMMM y', 'pt_BR');
 
     return Scaffold(
       appBar: AppBar(
@@ -148,16 +159,44 @@ class MainContent extends StatelessWidget {
               );
             },
           ),
+          Padding(
+            padding: const EdgeInsets.symmetric(
+              horizontal: 16.0,
+              vertical: 8.0,
+            ),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                IconButton(
+                  icon: const Icon(Icons.chevron_left),
+                  onPressed: onPreviousMonth,
+                ),
+                Text(
+                  monthFormatter.format(selectedMonth).toUpperCase(),
+                  style: const TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                IconButton(
+                  icon: const Icon(Icons.chevron_right),
+                  onPressed: onNextMonth,
+                ),
+              ],
+            ),
+          ),
           Expanded(
             child: StreamBuilder<QuerySnapshot>(
-              stream: firestoreService.getTransactionsStream(),
+              stream: firestoreService.getTransactionsStreamByMonth(
+                selectedMonth,
+              ),
               builder: (context, snapshot) {
                 if (snapshot.connectionState == ConnectionState.waiting)
                   return const Center(child: CircularProgressIndicator());
                 if (!snapshot.hasData || snapshot.data!.docs.isEmpty)
-                  return const Center(
+                  return Center(
                     child: Text(
-                      'Nenhuma transação adicionada.',
+                      'Nenhuma transação neste mês.',
                       style: TextStyle(color: Colors.grey, fontSize: 16),
                     ),
                   );
@@ -223,7 +262,7 @@ class MainContent extends StatelessWidget {
                       child: Row(
                         children: [
                           Text(
-                            "Histórico Recente",
+                            "Histórico do Mês",
                             style: TextStyle(
                               fontSize: 18,
                               fontWeight: FontWeight.bold,
@@ -332,7 +371,6 @@ class MainContent extends StatelessWidget {
     );
   }
 
-  // As funções auxiliares vivem aqui
   IconData _getIconForCategory(String category) {
     switch (category) {
       case 'Moradia':

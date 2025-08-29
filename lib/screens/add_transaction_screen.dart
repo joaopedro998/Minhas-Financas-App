@@ -4,7 +4,13 @@ import 'package:flutter_application_1/services/firestore_service.dart';
 
 class AddTransactionScreen extends StatefulWidget {
   final TransactionModel? transaction;
-  const AddTransactionScreen({super.key, this.transaction});
+  final DateTime? selectedMonthForNewTransaction;
+
+  const AddTransactionScreen({
+    super.key,
+    this.transaction,
+    this.selectedMonthForNewTransaction,
+  });
   @override
   State<AddTransactionScreen> createState() => _AddTransactionScreenState();
 }
@@ -14,13 +20,10 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
   final _descriptionController = TextEditingController();
   final _amountController = TextEditingController();
   final _personController = TextEditingController();
-
   String _transactionType = 'despesa';
-  String? _selectedCategory; // Variável para guardar a categoria selecionada
+  String? _selectedCategory;
   final FirestoreService _firestoreService = FirestoreService();
   bool get _isEditing => widget.transaction != null;
-
-  // Lista de categorias disponíveis
   final List<String> _categories = [
     'Moradia',
     'Alimentação',
@@ -41,7 +44,6 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
       _amountController.text = t.amount.toString();
       _personController.text = t.person;
       _transactionType = t.type;
-      // Preenche a categoria no modo de edição, se for uma despesa
       if (t.type == 'despesa') {
         _selectedCategory = t.category;
       }
@@ -55,7 +57,6 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
       'guardar',
       'usar_meta',
     ].contains(_transactionType);
-
     Color appBarColor;
     if (_transactionType == 'receita')
       appBarColor = Colors.green;
@@ -116,8 +117,6 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
                       v == null || v.isEmpty ? 'Insira uma descrição' : null,
                 ),
                 const SizedBox(height: 16),
-
-                // O campo de categoria só aparece se for uma despesa
                 if (isExpense)
                   DropdownButtonFormField<String>(
                     value: _selectedCategory,
@@ -125,23 +124,20 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
                     decoration: const InputDecoration(
                       border: OutlineInputBorder(),
                     ),
-                    items: _categories.map((String category) {
-                      return DropdownMenuItem<String>(
-                        value: category,
-                        child: Text(category),
-                      );
-                    }).toList(),
-                    onChanged: (newValue) {
-                      setState(() {
-                        _selectedCategory = newValue;
-                      });
-                    },
+                    items: _categories
+                        .map(
+                          (String category) => DropdownMenuItem<String>(
+                            value: category,
+                            child: Text(category),
+                          ),
+                        )
+                        .toList(),
+                    onChanged: (newValue) =>
+                        setState(() => _selectedCategory = newValue),
                     validator: (value) =>
                         value == null ? 'Selecione uma categoria' : null,
                   ),
-
                 const SizedBox(height: 16),
-
                 if (showPersonField)
                   TextFormField(
                     controller: _personController,
@@ -152,7 +148,6 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
                     validator: (v) =>
                         v == null || v.isEmpty ? 'Insira uma pessoa' : null,
                   ),
-
                 const SizedBox(height: 16),
                 TextFormField(
                   controller: _amountController,
@@ -215,6 +210,7 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
             'despesa',
             'Meta',
             'Outros',
+            DateTime.now(),
           );
         } else if (_isEditing) {
           final docId = widget.transaction!.id;
@@ -225,14 +221,30 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
             type,
             person,
             category,
+            DateTime.now(),
           );
         } else {
+          DateTime dateToSave;
+          final now = DateTime.now();
+          if (widget.selectedMonthForNewTransaction != null) {
+            final selected = widget.selectedMonthForNewTransaction!;
+            dateToSave = DateTime(
+              selected.year,
+              selected.month,
+              now.day,
+              now.hour,
+              now.minute,
+            );
+          } else {
+            dateToSave = now;
+          }
           await _firestoreService.addTransaction(
             description,
             amount,
             type,
             person,
             category,
+            dateToSave,
           );
         }
 

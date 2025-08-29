@@ -1,12 +1,10 @@
 // lib/screens/home_screen.dart
 
 import 'package:flutter/material.dart';
-// AQUI ESTÁ A CORREÇÃO! Adicionamos o import que estava faltando.
 import 'package:flutter_application_1/screens/add_transaction_screen.dart';
 import 'package:flutter_application_1/screens/reports_screen.dart';
 import 'package:flutter_application_1/widgets/main_content.dart';
 
-// Convertemos a HomeScreen para um StatefulWidget para controlar os separadores
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
 
@@ -15,14 +13,8 @@ class HomeScreen extends StatefulWidget {
 }
 
 class _HomeScreenState extends State<HomeScreen> {
-  // Variável que controla qual separador está selecionado (0 = Início, 1 = Relatórios)
   int _selectedIndex = 0;
-
-  // Lista das telas que a nossa barra de navegação irá controlar
-  static const List<Widget> _widgetOptions = <Widget>[
-    MainContent(), // A nossa antiga tela principal
-    ReportsScreen(), // A nossa nova tela de relatórios
-  ];
+  DateTime _selectedMonth = DateTime.now();
 
   void _onItemTapped(int index) {
     setState(() {
@@ -30,12 +22,39 @@ class _HomeScreenState extends State<HomeScreen> {
     });
   }
 
+  void _previousMonth() {
+    setState(() {
+      _selectedMonth = DateTime(
+        _selectedMonth.year,
+        _selectedMonth.month - 1,
+        1,
+      );
+    });
+  }
+
+  void _nextMonth() {
+    setState(() {
+      _selectedMonth = DateTime(
+        _selectedMonth.year,
+        _selectedMonth.month + 1,
+        1,
+      );
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
+    final List<Widget> widgetOptions = <Widget>[
+      MainContent(
+        selectedMonth: _selectedMonth,
+        onPreviousMonth: _previousMonth,
+        onNextMonth: _nextMonth,
+      ),
+      const ReportsScreen(),
+    ];
+
     return Scaffold(
-      // O corpo da tela agora mostra o widget selecionado da lista
-      body: Center(child: _widgetOptions.elementAt(_selectedIndex)),
-      // Adicionamos a barra de navegação inferior
+      body: Center(child: widgetOptions.elementAt(_selectedIndex)),
       bottomNavigationBar: BottomNavigationBar(
         items: const <BottomNavigationBarItem>[
           BottomNavigationBarItem(icon: Icon(Icons.home), label: 'Início'),
@@ -46,25 +65,24 @@ class _HomeScreenState extends State<HomeScreen> {
         ],
         currentIndex: _selectedIndex,
         selectedItemColor: Colors.indigo,
-        unselectedItemColor:
-            Colors.grey, // Uma cor para os itens não selecionados
+        unselectedItemColor: Colors.grey,
         onTap: _onItemTapped,
       ),
-      // O botão flutuante só aparece na tela inicial (índice 0)
       floatingActionButton: _selectedIndex == 0
           ? FloatingActionButton(
               onPressed: () => Navigator.push(
                 context,
                 MaterialPageRoute(
-                  builder: (context) => const AddTransactionScreen(),
+                  builder: (context) => AddTransactionScreen(
+                    selectedMonthForNewTransaction: _selectedMonth,
+                  ),
                 ),
               ),
               backgroundColor: Colors.indigo,
               child: const Icon(Icons.add, color: Colors.white),
             )
           : null,
-      floatingActionButtonLocation:
-          FloatingActionButtonLocation.centerDocked, // Centraliza o botão
+      floatingActionButtonLocation: FloatingActionButtonLocation.centerDocked,
     );
   }
 }
