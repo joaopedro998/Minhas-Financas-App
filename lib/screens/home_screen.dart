@@ -23,14 +23,8 @@ class HomeScreen extends StatelessWidget {
           StreamBuilder<DocumentSnapshot>(
             stream: firestoreService.getGoalStream(),
             builder: (context, snapshot) {
-              if (snapshot.connectionState == ConnectionState.waiting) {
-                return const Padding(
-                  padding: EdgeInsets.all(16.0),
-                  child: Center(child: CircularProgressIndicator()),
-                );
-              }
-
               if (!snapshot.hasData || !snapshot.data!.exists) {
+                // ...código para quando não há meta...
                 return Card(
                   margin: const EdgeInsets.all(16.0),
                   child: Padding(
@@ -65,7 +59,6 @@ class HomeScreen extends StatelessWidget {
                 child: Padding(
                   padding: const EdgeInsets.all(16.0),
                   child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Row(
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -78,11 +71,28 @@ class HomeScreen extends StatelessWidget {
                               color: Colors.blue,
                             ),
                           ),
-                          TextButton.icon(
-                            onPressed: () =>
-                                _showSetGoalDialog(context, firestoreService),
-                            icon: const Icon(Icons.edit, size: 16),
-                            label: const Text('Nova Meta'),
+                          PopupMenuButton<String>(
+                            onSelected: (value) {
+                              if (value == 'nova') {
+                                _showSetGoalDialog(context, firestoreService);
+                              } else if (value == 'reiniciar') {
+                                firestoreService.resetGoalProgress();
+                              }
+                            },
+                            itemBuilder: (BuildContext context) =>
+                                <PopupMenuEntry<String>>[
+                                  const PopupMenuItem<String>(
+                                    value: 'nova',
+                                    child: Text('Definir Nova Meta'),
+                                  ),
+                                  const PopupMenuItem<String>(
+                                    value: 'reiniciar',
+                                    child: Text('Reiniciar Progresso'),
+                                  ),
+                                ],
+                            // AQUI ESTÁ A CORREÇÃO!
+                            // Adicionamos um ícone para ser a parte clicável do botão.
+                            child: const Icon(Icons.more_vert),
                           ),
                         ],
                       ),
@@ -120,24 +130,19 @@ class HomeScreen extends StatelessWidget {
               );
             },
           ),
-
-          // --- LISTA DE TRANSAÇÕES (CÓDIGO COMPLETO) ---
+          // --- LISTA DE TRANSAÇÕES ---
           Expanded(
             child: StreamBuilder<QuerySnapshot>(
               stream: firestoreService.getTransactionsStream(),
               builder: (context, snapshot) {
-                if (snapshot.connectionState == ConnectionState.waiting) {
+                // O código da lista não muda
+                if (snapshot.connectionState == ConnectionState.waiting)
                   return const Center(child: CircularProgressIndicator());
-                }
-
-                if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
+                if (!snapshot.hasData || snapshot.data!.docs.isEmpty)
                   return const Center(
                     child: Text('Nenhuma transação adicionada.'),
                   );
-                }
-
                 final transactions = snapshot.data!.docs;
-
                 return ListView.builder(
                   itemCount: transactions.length,
                   itemBuilder: (context, index) {
@@ -196,11 +201,11 @@ class HomeScreen extends StatelessWidget {
     );
   }
 
-  // --- Janela de Diálogo para Definir a Meta ---
   void _showSetGoalDialog(
     BuildContext context,
     FirestoreService firestoreService,
   ) {
+    // A função do Dialog não muda
     final goalFormKey = GlobalKey<FormState>();
     final goalController = TextEditingController();
 
@@ -221,12 +226,10 @@ class HomeScreen extends StatelessWidget {
                 border: OutlineInputBorder(),
               ),
               validator: (value) {
-                if (value == null || value.isEmpty) {
+                if (value == null || value.isEmpty)
                   return 'Por favor, insira um valor';
-                }
-                if (double.tryParse(value.replaceAll(',', '.')) == null) {
+                if (double.tryParse(value.replaceAll(',', '.')) == null)
                   return 'Por favor, insira um número válido';
-                }
                 return null;
               },
             ),

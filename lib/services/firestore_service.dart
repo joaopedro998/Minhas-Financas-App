@@ -2,7 +2,6 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 
 class FirestoreService {
   final FirebaseFirestore _db = FirebaseFirestore.instance;
-  // Referência para o documento da meta
   final DocumentReference _goalDocument = FirebaseFirestore.instance
       .collection('metas')
       .doc('meta_principal');
@@ -48,23 +47,27 @@ class FirestoreService {
         .snapshots();
   }
 
-  // --- Funções para a Meta ---
-
-  // Obter um "fluxo" de dados da meta em tempo real
+  // --- Funções para a Meta (Atualizadas) ---
   Stream<DocumentSnapshot> getGoalStream() {
     return _goalDocument.snapshots();
   }
 
-  // Adicionar um valor ao total da meta
   Future<void> addValueToGoal(double amount) {
     return _goalDocument.update({'valorAtual': FieldValue.increment(amount)});
   }
 
-  // NOVO MÉTODO: Definir uma nova meta e zerar o progresso
   Future<void> setNewGoal(double newGoalValue) {
-    return _goalDocument.update({
-      'valorMeta': newGoalValue,
-      'valorAtual': 0, // Zera o progresso atual ao definir uma nova meta
-    });
+    return _goalDocument.update({'valorMeta': newGoalValue, 'valorAtual': 0});
+  }
+
+  // NOVO MÉTODO 1: Retirar um valor do total da meta
+  Future<void> withdrawValueFromGoal(double amount) {
+    // Usamos FieldValue.increment com um número negativo para subtrair
+    return _goalDocument.update({'valorAtual': FieldValue.increment(-amount)});
+  }
+
+  // NOVO MÉTODO 2: Reiniciar o progresso da meta atual
+  Future<void> resetGoalProgress() {
+    return _goalDocument.update({'valorAtual': 0});
   }
 }

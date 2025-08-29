@@ -2,18 +2,17 @@ import 'package:flutter/material.dart';
 import 'package:flutter_application_1/models/transaction_model.dart';
 import 'package:flutter_application_1/services/firestore_service.dart';
 
-// A "Carcaça" do Widget agora pode receber uma transação para editar.
 class AddTransactionScreen extends StatefulWidget {
-  // A transação é opcional. Se for nula, estamos criando. Se não, estamos editando.
   final TransactionModel? transaction;
-
   const AddTransactionScreen({super.key, this.transaction});
-
   @override
   State<AddTransactionScreen> createState() => _AddTransactionScreenState();
 }
 
 class _AddTransactionScreenState extends State<AddTransactionScreen> {
+  // AQUI ESTÁ A CORREÇÃO!
+  // As declarações das chaves e controladores precisam estar aqui,
+  // como propriedades da classe State.
   final _formKey = GlobalKey<FormState>();
   final _descriptionController = TextEditingController();
   final _amountController = TextEditingController();
@@ -21,18 +20,12 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
 
   String _transactionType = 'despesa';
   final FirestoreService _firestoreService = FirestoreService();
-
-  // Variável para saber se estamos no modo de edição.
   bool get _isEditing => widget.transaction != null;
 
-  // O método initState() é chamado UMA VEZ quando a tela é criada.
-  // É o lugar perfeito para preencher o formulário se estivermos editando.
   @override
   void initState() {
     super.initState();
-
     if (_isEditing) {
-      // Se estamos editando, preenchemos os campos com os dados da transação existente.
       final transaction = widget.transaction!;
       _descriptionController.text = transaction.description;
       _amountController.text = transaction.amount.toString();
@@ -43,13 +36,25 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final bool isGoalOperation =
+        _transactionType == 'guardar' || _transactionType == 'usar_meta';
+
+    Color appBarColor;
+    if (_transactionType == 'receita') {
+      appBarColor = Colors.green;
+    } else if (_transactionType == 'despesa') {
+      appBarColor = Colors.red;
+    } else if (_transactionType == 'guardar') {
+      appBarColor = Colors.blue;
+    } else {
+      // usar_meta
+      appBarColor = Colors.orange;
+    }
+
     return Scaffold(
       appBar: AppBar(
-        // O título da tela agora é dinâmico.
         title: Text(_isEditing ? 'Editar Transação' : 'Adicionar Transação'),
-        backgroundColor: _transactionType == 'receita'
-            ? Colors.green
-            : Colors.red,
+        backgroundColor: appBarColor,
       ),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
@@ -64,12 +69,18 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
                     ButtonSegment<String>(
                       value: 'despesa',
                       label: Text('Despesa'),
-                      icon: Icon(Icons.arrow_downward),
                     ),
                     ButtonSegment<String>(
                       value: 'receita',
                       label: Text('Receita'),
-                      icon: Icon(Icons.arrow_upward),
+                    ),
+                    ButtonSegment<String>(
+                      value: 'guardar',
+                      label: Text('Guardar'),
+                    ),
+                    ButtonSegment<String>(
+                      value: 'usar_meta',
+                      label: Text('Usar da Meta'),
                     ),
                   ],
                   selected: {_transactionType},
@@ -86,27 +97,20 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
                     labelText: 'Descrição',
                     border: OutlineInputBorder(),
                   ),
-                  validator: (value) {
-                    if (value == null || value.isEmpty) {
-                      return 'Por favor, insira uma descrição';
-                    }
-                    return null;
-                  },
+                  validator: (v) =>
+                      v == null || v.isEmpty ? 'Insira uma descrição' : null,
                 ),
                 const SizedBox(height: 16),
-                TextFormField(
-                  controller: _personController,
-                  decoration: const InputDecoration(
-                    labelText: 'Pessoa (Ex: João, Maria)',
-                    border: OutlineInputBorder(),
+                if (!isGoalOperation)
+                  TextFormField(
+                    controller: _personController,
+                    decoration: const InputDecoration(
+                      labelText: 'Pessoa',
+                      border: OutlineInputBorder(),
+                    ),
+                    validator: (v) =>
+                        v == null || v.isEmpty ? 'Insira uma pessoa' : null,
                   ),
-                  validator: (value) {
-                    if (value == null || value.isEmpty) {
-                      return 'Por favor, insira o nome da pessoa';
-                    }
-                    return null;
-                  },
-                ),
                 const SizedBox(height: 16),
                 TextFormField(
                   controller: _amountController,
@@ -117,13 +121,10 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
                   keyboardType: const TextInputType.numberWithOptions(
                     decimal: true,
                   ),
-                  validator: (value) {
-                    if (value == null || value.isEmpty) {
-                      return 'Por favor, insira um valor';
-                    }
-                    if (double.tryParse(value.replaceAll(',', '.')) == null) {
-                      return 'Por favor, insira um número válido';
-                    }
+                  validator: (v) {
+                    if (v == null || v.isEmpty) return 'Insira um valor';
+                    if (double.tryParse(v.replaceAll(',', '.')) == null)
+                      return 'Número inválido';
                     return null;
                   },
                 ),
@@ -132,13 +133,15 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
                   onPressed: _saveTransaction,
                   style: ElevatedButton.styleFrom(
                     padding: const EdgeInsets.symmetric(vertical: 16),
-                    backgroundColor: _transactionType == 'receita'
-                        ? Colors.green
-                        : Colors.red,
+                    backgroundColor: appBarColor,
                   ),
-                  child: const Text(
-                    'Salvar Transação',
-                    style: TextStyle(fontSize: 18, color: Colors.white),
+                  child: Text(
+                    _transactionType == 'guardar'
+                        ? 'Guardar na Meta'
+                        : (_transactionType == 'usar_meta'
+                              ? 'Usar da Meta'
+                              : 'Salvar Transação'),
+                    style: const TextStyle(fontSize: 18, color: Colors.white),
                   ),
                 ),
               ],
@@ -149,17 +152,27 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
     );
   }
 
-  // A lógica de salvar agora é mais inteligente.
   void _saveTransaction() async {
     if (_formKey.currentState!.validate()) {
       final description = _descriptionController.text;
       final amount = double.parse(_amountController.text.replaceAll(',', '.'));
       final type = _transactionType;
-      final person = _personController.text;
+      final person = _personController.text.isEmpty
+          ? 'N/A'
+          : _personController.text;
 
       try {
-        if (_isEditing) {
-          // Se estamos editando, chamamos o método de ATUALIZAR.
+        if (type == 'guardar') {
+          await _firestoreService.addValueToGoal(amount);
+        } else if (type == 'usar_meta') {
+          await _firestoreService.withdrawValueFromGoal(amount);
+          await _firestoreService.addTransaction(
+            '$description (Meta)',
+            amount,
+            'despesa',
+            'Meta',
+          );
+        } else if (_isEditing) {
           final docId = widget.transaction!.id;
           await _firestoreService.updateTransaction(
             docId,
@@ -169,7 +182,6 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
             person,
           );
         } else {
-          // Se não, chamamos o método de ADICIONAR, como antes.
           await _firestoreService.addTransaction(
             description,
             amount,
@@ -180,15 +192,15 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
 
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('Transação salva com sucesso!')),
+            const SnackBar(content: Text('Operação realizada com sucesso!')),
           );
-          Navigator.pop(context); // Volta para a tela anterior
+          Navigator.pop(context);
         }
       } catch (e) {
         if (mounted) {
           ScaffoldMessenger.of(
             context,
-          ).showSnackBar(SnackBar(content: Text('Erro ao salvar: $e')));
+          ).showSnackBar(SnackBar(content: Text('Erro: $e')));
         }
       }
     }
