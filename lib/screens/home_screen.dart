@@ -15,7 +15,8 @@ class HomeScreen extends StatelessWidget {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Minhas Finanças'),
-        backgroundColor: Colors.blueAccent,
+        backgroundColor: Colors.indigo, // Nova cor
+        elevation: 0,
       ),
       body: Column(
         children: [
@@ -23,8 +24,14 @@ class HomeScreen extends StatelessWidget {
           StreamBuilder<DocumentSnapshot>(
             stream: firestoreService.getGoalStream(),
             builder: (context, snapshot) {
+              if (snapshot.connectionState == ConnectionState.waiting) {
+                return const Padding(
+                  padding: EdgeInsets.all(16.0),
+                  child: Center(child: CircularProgressIndicator()),
+                );
+              }
+
               if (!snapshot.hasData || !snapshot.data!.exists) {
-                // ...código para quando não há meta...
                 return Card(
                   margin: const EdgeInsets.all(16.0),
                   child: Padding(
@@ -56,6 +63,9 @@ class HomeScreen extends StatelessWidget {
               return Card(
                 margin: const EdgeInsets.all(16.0),
                 elevation: 4,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(10),
+                ),
                 child: Padding(
                   padding: const EdgeInsets.all(16.0),
                   child: Column(
@@ -90,8 +100,6 @@ class HomeScreen extends StatelessWidget {
                                     child: Text('Reiniciar Progresso'),
                                   ),
                                 ],
-                            // AQUI ESTÁ A CORREÇÃO!
-                            // Adicionamos um ícone para ser a parte clicável do botão.
                             child: const Icon(Icons.more_vert),
                           ),
                         ],
@@ -130,61 +138,187 @@ class HomeScreen extends StatelessWidget {
               );
             },
           ),
-          // --- LISTA DE TRANSAÇÕES ---
+
+          // --- LISTA E RESUMO DE TRANSAÇÕES ---
           Expanded(
             child: StreamBuilder<QuerySnapshot>(
               stream: firestoreService.getTransactionsStream(),
               builder: (context, snapshot) {
-                // O código da lista não muda
                 if (snapshot.connectionState == ConnectionState.waiting)
                   return const Center(child: CircularProgressIndicator());
                 if (!snapshot.hasData || snapshot.data!.docs.isEmpty)
                   return const Center(
-                    child: Text('Nenhuma transação adicionada.'),
+                    child: Text(
+                      'Nenhuma transação adicionada.',
+                      style: TextStyle(color: Colors.grey, fontSize: 16),
+                    ),
                   );
-                final transactions = snapshot.data!.docs;
-                return ListView.builder(
-                  itemCount: transactions.length,
-                  itemBuilder: (context, index) {
-                    final transaction = TransactionModel.fromFirestore(
-                      transactions[index],
-                    );
-                    final isRevenue = transaction.type == 'receita';
-                    final formatadorMoeda = NumberFormat.currency(
-                      locale: 'pt_BR',
-                      symbol: 'R\$',
-                    );
-                    final formatadorData = DateFormat('dd/MM/yyyy');
-                    return Card(
+
+                final transactionsDocs = snapshot.data!.docs;
+
+                // --- LÓGICA DE CÁLCULO DO SALDO ---
+                double totalRevenue = 0.0;
+                double totalExpenses = 0.0;
+                for (var doc in transactionsDocs) {
+                  final transaction = TransactionModel.fromFirestore(doc);
+                  if (transaction.type == 'receita') {
+                    totalRevenue += transaction.amount;
+                  } else if (transaction.type == 'despesa') {
+                    totalExpenses += transaction.amount;
+                  }
+                }
+                final balance = totalRevenue - totalExpenses;
+                final formatadorMoeda = NumberFormat.currency(
+                  locale: 'pt_BR',
+                  symbol: 'R\$',
+                );
+
+                return Column(
+                  children: [
+                    // --- CARD DE RESUMO FINANCEIRO ---
+                    Card(
                       margin: const EdgeInsets.symmetric(
                         horizontal: 16.0,
-                        vertical: 6.0,
+                        vertical: 8.0,
                       ),
-                      child: ListTile(
-                        onTap: () => Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (context) =>
-                                AddTransactionScreen(transaction: transaction),
-                          ),
-                        ),
-                        title: Text(
-                          transaction.description,
-                          style: const TextStyle(fontWeight: FontWeight.bold),
-                        ),
-                        subtitle: Text(
-                          '${transaction.person} • ${formatadorData.format(transaction.date.toDate())}',
-                        ),
-                        trailing: Text(
-                          formatadorMoeda.format(transaction.amount),
-                          style: TextStyle(
-                            color: isRevenue ? Colors.green : Colors.red,
-                            fontWeight: FontWeight.bold,
-                          ),
+                      elevation: 4,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                      child: Padding(
+                        padding: const EdgeInsets.all(16.0),
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceAround,
+                          children: [
+                            _buildSummaryItem(
+                              Icons.arrow_upward,
+                              "Receitas",
+                              formatadorMoeda.format(totalRevenue),
+                              Colors.green,
+                            ),
+                            _buildSummaryItem(
+                              Icons.arrow_downward,
+                              "Despesas",
+                              formatadorMoeda.format(totalExpenses),
+                              Colors.red,
+                            ),
+                            _buildSummaryItem(
+                              Icons.account_balance_wallet,
+                              "Saldo",
+                              formatadorMoeda.format(balance),
+                              Colors.indigo,
+                            ),
+                          ],
                         ),
                       ),
-                    );
-                  },
+                    ),
+
+                    const Padding(
+                      padding: EdgeInsets.only(
+                        left: 20.0,
+                        top: 10.0,
+                        bottom: 5.0,
+                      ),
+                      child: Row(
+                        children: [
+                          Text(
+                            "Histórico Recente",
+                            style: TextStyle(
+                              fontSize: 18,
+                              fontWeight: FontWeight.bold,
+                              color: Colors.black54,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+
+                    // --- LISTA DE TRANSAÇÕES ---
+                    Expanded(
+                      child: ListView.builder(
+                        itemCount: transactionsDocs.length,
+                        itemBuilder: (context, index) {
+                          final transaction = TransactionModel.fromFirestore(
+                            transactionsDocs[index],
+                          );
+                          final isRevenue = transaction.type == 'receita';
+                          return Dismissible(
+                            key: Key(transaction.id),
+                            onDismissed: (direction) {
+                              firestoreService.deleteTransaction(
+                                transaction.id,
+                              );
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                SnackBar(
+                                  content: Text(
+                                    "${transaction.description} deletado(a).",
+                                  ),
+                                ),
+                              );
+                            },
+                            background: Container(
+                              color: Colors.red,
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 20,
+                              ),
+                              alignment: Alignment.centerRight,
+                              child: const Icon(
+                                Icons.delete,
+                                color: Colors.white,
+                              ),
+                            ),
+                            child: Card(
+                              margin: const EdgeInsets.symmetric(
+                                horizontal: 16.0,
+                                vertical: 6.0,
+                              ),
+                              child: ListTile(
+                                onTap: () => Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                    builder: (context) => AddTransactionScreen(
+                                      transaction: transaction,
+                                    ),
+                                  ),
+                                ),
+                                leading: CircleAvatar(
+                                  backgroundColor:
+                                      (isRevenue ? Colors.green : Colors.red)
+                                          .withOpacity(0.1),
+                                  child: Icon(
+                                    isRevenue
+                                        ? Icons.arrow_upward
+                                        : Icons.arrow_downward,
+                                    color: isRevenue
+                                        ? Colors.green
+                                        : Colors.red,
+                                  ),
+                                ),
+                                title: Text(
+                                  transaction.description,
+                                  style: const TextStyle(
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
+                                subtitle: Text(
+                                  '${transaction.person} • ${DateFormat('dd/MM/yyyy').format(transaction.date.toDate())}',
+                                ),
+                                trailing: Text(
+                                  formatadorMoeda.format(transaction.amount),
+                                  style: TextStyle(
+                                    fontWeight: FontWeight.bold,
+                                    color: isRevenue
+                                        ? Colors.green
+                                        : Colors.red,
+                                  ),
+                                ),
+                              ),
+                            ),
+                          );
+                        },
+                      ),
+                    ),
+                  ],
                 );
               },
             ),
@@ -196,16 +330,42 @@ class HomeScreen extends StatelessWidget {
           context,
           MaterialPageRoute(builder: (context) => const AddTransactionScreen()),
         ),
-        child: const Icon(Icons.add),
+        backgroundColor: Colors.indigo,
+        child: const Icon(Icons.add, color: Colors.white),
       ),
     );
   }
 
+  // --- Função Auxiliar para construir os itens do resumo ---
+  Widget _buildSummaryItem(
+    IconData icon,
+    String label,
+    String value,
+    Color color,
+  ) {
+    return Column(
+      children: [
+        Icon(icon, color: color, size: 28),
+        const SizedBox(height: 4),
+        Text(label, style: const TextStyle(fontSize: 12, color: Colors.grey)),
+        const SizedBox(height: 4),
+        Text(
+          value,
+          style: TextStyle(
+            fontWeight: FontWeight.bold,
+            fontSize: 16,
+            color: color,
+          ),
+        ),
+      ],
+    );
+  }
+
+  // --- Janela de Diálogo para Definir a Meta ---
   void _showSetGoalDialog(
     BuildContext context,
     FirestoreService firestoreService,
   ) {
-    // A função do Dialog não muda
     final goalFormKey = GlobalKey<FormState>();
     final goalController = TextEditingController();
 
@@ -225,11 +385,10 @@ class HomeScreen extends StatelessWidget {
                 labelText: "Valor da meta (R\$)",
                 border: OutlineInputBorder(),
               ),
-              validator: (value) {
-                if (value == null || value.isEmpty)
-                  return 'Por favor, insira um valor';
-                if (double.tryParse(value.replaceAll(',', '.')) == null)
-                  return 'Por favor, insira um número válido';
+              validator: (v) {
+                if (v == null || v.isEmpty) return 'Insira um valor';
+                if (double.tryParse(v.replaceAll(',', '.')) == null)
+                  return 'Número inválido';
                 return null;
               },
             ),

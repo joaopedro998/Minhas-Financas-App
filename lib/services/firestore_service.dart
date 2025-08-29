@@ -6,7 +6,7 @@ class FirestoreService {
       .collection('metas')
       .doc('meta_principal');
 
-  // --- Funções para Transações (não mudam) ---
+  // --- Funções para Transações ---
   Future<void> addTransaction(
     String description,
     double amount,
@@ -40,6 +40,11 @@ class FirestoreService {
     return _db.collection('transactions').doc(docId).update(transactionData);
   }
 
+  // NOVO MÉTODO: Deletar uma transação
+  Future<void> deleteTransaction(String docId) {
+    return _db.collection('transactions').doc(docId).delete();
+  }
+
   Stream<QuerySnapshot> getTransactionsStream() {
     return _db
         .collection('transactions')
@@ -47,7 +52,7 @@ class FirestoreService {
         .snapshots();
   }
 
-  // --- Funções para a Meta (Atualizadas) ---
+  // --- Funções para a Meta ---
   Stream<DocumentSnapshot> getGoalStream() {
     return _goalDocument.snapshots();
   }
@@ -60,13 +65,10 @@ class FirestoreService {
     return _goalDocument.update({'valorMeta': newGoalValue, 'valorAtual': 0});
   }
 
-  // NOVO MÉTODO 1: Retirar um valor do total da meta
   Future<void> withdrawValueFromGoal(double amount) {
-    // Usamos FieldValue.increment com um número negativo para subtrair
     return _goalDocument.update({'valorAtual': FieldValue.increment(-amount)});
   }
 
-  // NOVO MÉTODO 2: Reiniciar o progresso da meta atual
   Future<void> resetGoalProgress() {
     return _goalDocument.update({'valorAtual': 0});
   }
