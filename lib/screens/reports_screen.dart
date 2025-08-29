@@ -7,7 +7,6 @@ import 'package:intl/intl.dart';
 import 'package:flutter_application_1/models/transaction_model.dart';
 import 'package:flutter_application_1/services/firestore_service.dart';
 
-// MUDANÇA: Convertido para StatefulWidget
 class ReportsScreen extends StatefulWidget {
   const ReportsScreen({super.key});
 
@@ -16,11 +15,9 @@ class ReportsScreen extends StatefulWidget {
 }
 
 class _ReportsScreenState extends State<ReportsScreen> {
-  // Variável de estado para guardar o mês selecionado
   DateTime _selectedMonth = DateTime.now();
   final FirestoreService _firestoreService = FirestoreService();
 
-  // Função para mudar para o mês anterior
   void _previousMonth() {
     setState(() {
       _selectedMonth = DateTime(
@@ -31,7 +28,6 @@ class _ReportsScreenState extends State<ReportsScreen> {
     });
   }
 
-  // Função para mudar para o próximo mês
   void _nextMonth() {
     setState(() {
       _selectedMonth = DateTime(
@@ -44,7 +40,6 @@ class _ReportsScreenState extends State<ReportsScreen> {
 
   @override
   Widget build(BuildContext context) {
-    // Formatador para o título (ex: "Agosto 2025")
     final monthFormatter = DateFormat('MMMM y', 'pt_BR');
 
     return Scaffold(
@@ -55,7 +50,6 @@ class _ReportsScreenState extends State<ReportsScreen> {
       ),
       body: Column(
         children: [
-          // MUDANÇA: Adicionado o seletor de mês
           Padding(
             padding: const EdgeInsets.symmetric(
               horizontal: 16.0,
@@ -84,7 +78,6 @@ class _ReportsScreenState extends State<ReportsScreen> {
           ),
           Expanded(
             child: StreamBuilder<QuerySnapshot>(
-              // MUDANÇA: O stream agora filtra pelo mês selecionado
               stream: _firestoreService.getTransactionsStreamByMonth(
                 _selectedMonth,
               ),
@@ -125,7 +118,6 @@ class _ReportsScreenState extends State<ReportsScreen> {
                   padding: const EdgeInsets.all(16.0),
                   child: Column(
                     children: [
-                      // MUDANÇA: O título do gráfico agora é dinâmico
                       const Text(
                         'Despesas por Categoria (Mês)',
                         style: TextStyle(
@@ -143,8 +135,8 @@ class _ReportsScreenState extends State<ReportsScreen> {
                             sections: List.generate(categoryExpenses.length, (
                               index,
                             ) {
-                              final categoryName = categoryExpenses.keys
-                                  .elementAt(index);
+                              // AQUI ESTÁ A CORREÇÃO!
+                              // A variável 'categoryName' foi removida porque não era usada aqui.
                               final categoryValue = categoryExpenses.values
                                   .elementAt(index);
                               final color =
@@ -180,6 +172,7 @@ class _ReportsScreenState extends State<ReportsScreen> {
                           index,
                         ) {
                           final color = chartColors[index % chartColors.length];
+                          // Aqui a variável 'categoryName' é necessária e continua a ser usada
                           final categoryName = categoryExpenses.keys.elementAt(
                             index,
                           );
