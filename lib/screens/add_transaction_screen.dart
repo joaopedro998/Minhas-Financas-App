@@ -1,3 +1,5 @@
+// lib/screens/add_transaction_screen.dart
+
 import 'package:flutter/material.dart';
 import 'package:flutter_application_1/models/transaction_model.dart';
 import 'package:flutter_application_1/services/firestore_service.dart';
@@ -117,7 +119,8 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
                       v == null || v.isEmpty ? 'Insira uma descrição' : null,
                 ),
                 const SizedBox(height: 16),
-                if (isExpense)
+
+                if (isExpense) ...[
                   DropdownButtonFormField<String>(
                     value: _selectedCategory,
                     hint: const Text('Selecione uma Categoria'),
@@ -137,8 +140,10 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
                     validator: (value) =>
                         value == null ? 'Selecione uma categoria' : null,
                   ),
-                const SizedBox(height: 16),
-                if (showPersonField)
+                  const SizedBox(height: 16),
+                ],
+
+                if (showPersonField) ...[
                   TextFormField(
                     controller: _personController,
                     decoration: const InputDecoration(
@@ -148,13 +153,16 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
                     validator: (v) =>
                         v == null || v.isEmpty ? 'Insira uma pessoa' : null,
                   ),
-                const SizedBox(height: 16),
+                  const SizedBox(height: 16),
+                ],
+
                 TextFormField(
                   controller: _amountController,
                   decoration: const InputDecoration(
                     labelText: 'Valor (R\$)',
                     border: OutlineInputBorder(),
                   ),
+                  // AQUI ESTÁ A CORREÇÃO! Trocado '-' por '.'
                   keyboardType: const TextInputType.numberWithOptions(
                     decimal: true,
                   ),
