@@ -1,29 +1,196 @@
-# 📊 MyHome Finance
+# 📊 Minhas Finanças App
 
-Um aplicativo de **finanças pessoais** desenvolvido em **Flutter** com integração ao **Firebase**, criado para ajudar no controle de contas, despesas e receitas da minha casa.  
-O objetivo principal é facilitar o gerenciamento financeiro compartilhado (ex: contas de água, luz, aluguel e outras despesas do dia a dia).
+![Status](https://img.shields.io/badge/status-concluído-brightgreen)
+![Flutter](https://img.shields.io/badge/Framework-Flutter-02569B?logo=flutter)
+![Firebase](https://img.shields.io/badge/Backend-Firebase-FFA000?logo=firebase)
+![Licença](https://img.shields.io/badge/licença-MIT-blue)
+
+Um aplicativo completo de **finanças pessoais** desenvolvido em **Flutter** com integração em tempo real ao **Firebase**. Criado para facilitar o controlo de receitas, despesas, metas de poupança e análise de gastos.
 
 ---
 
 ## ✨ Funcionalidades
 
-- 🔑 Autenticação de usuários (Firebase Auth)  
-- 💸 Cadastro de despesas (água, luz, aluguel, etc.)  
-- 📈 Relatório financeiro com gráficos e estatísticas  
-- 📂 Organização por categorias de gastos  
-- 👫 Possibilidade de gerenciar despesas em conjunto (ex: dividir entre moradores)  
-- ☁️ Sincronização em tempo real com **Firebase Firestore**  
-- 📱 Interface responsiva (Android/iOS)  
+- **Gestão Completa (CRUD):** Crie, leia, edite e apague transações.
+- **Organização por Mês:** Navegue facilmente entre os meses para ver o histórico financeiro.
+- **Painel de Resumo:** Veja o total de receitas, despesas e o saldo do mês selecionado.
+- **Categorias de Despesas:** Classifique as suas despesas (Moradia, Alimentação, etc.) com ícones personalizados.
+- **Lançamentos por Pessoa:** Associe cada transação a uma pessoa (ex: você, sua namorada).
+- **Metas de Poupança:**
+    - Defina uma meta de poupança dinâmica.
+    - Adicione ou retire dinheiro da meta.
+    - Acompanhe o progresso com uma barra visual e percentagem.
+    - Reinicie ou defina novas metas a qualquer momento.
+- **Relatórios Visuais:**
+    - Secção de relatórios com um **gráfico de pizza** interativo.
+    - Analise a distribuição das suas despesas por categoria em cada mês.
+- **Tema Escuro (Dark Mode):**
+    - Adapta-se automaticamente ao tema do sistema.
+    - Botão de controlo manual para alternar entre o modo claro e escuro.
+- **Identidade Visual:** Nome e ícone do aplicativo totalmente personalizados.
+- **Sincronização em Tempo Real:** Todas as informações são salvas e atualizadas instantaneamente com o **Firebase Firestore**.
 
 ---
 
 ## 🛠️ Tecnologias Utilizadas
 
-- [Flutter](https://flutter.dev/) — Framework para desenvolvimento mobile multiplataforma  
-- [Dart](https://dart.dev/) — Linguagem de programação  
-- [Firebase Authentication](https://firebase.google.com/products/auth) — Login e autenticação  
-- [Firebase Firestore](https://firebase.google.com/products/firestore) — Banco de dados em tempo real  
-- [Firebase Storage](https://firebase.google.com/products/storage) — Armazenamento de recibos/imagens de comprovantes  
-- [Provider](https://pub.dev/packages/provider) — Gerenciamento de estado  
-- [flutterfire_cli](https://firebase.flutter.dev/docs/cli) — Configuração do Firebase no Flutter  
+- **[Flutter](https://flutter.dev/)**: Framework para desenvolvimento de interfaces de utilizador multiplataforma.
+- **[Dart](https://dart.dev/)**: Linguagem de programação.
+- **[Firebase Firestore](https://firebase.google.com/products/firestore)**: Banco de dados NoSQL para armazenamento de dados em tempo real.
+- **[fl_chart](https://pub.dev/packages/fl_chart)**: Biblioteca para criar gráficos ricos e interativos.
+- **[intl](https://pub.dev/packages/intl)**: Pacote para internacionalização e formatação de datas e moedas.
+- **[flutter_launcher_icons](https://pub.dev/packages/flutter_launcher_icons)**: Ferramenta para gerar os ícones do aplicativo.
+
+---
+
+## 🚀 Como Rodar o Projeto
+
+### **Pré-requisitos**
+
+- Ter o **[Flutter SDK](https://flutter.dev/docs/get-started/install)** instalado.
+- Um editor de código como o **[VS Code](https://code.visualstudio.com/)**.
+- Um emulador Android ou um dispositivo físico.
+
+### **Instalação e Execução**
+
+1.  **Clone o repositório:**
+    ```bash
+    git clone [https://github.com/SEU-USUARIO/SEU-REPOSITORIO.git](https://github.com/SEU-USUARIO/SEU-REPOSITORIO.git)
+    cd SEU-REPOSITORIO
+    ```
+
+2.  **Instale as dependências:**
+    ```bash
+    flutter pub get
+    ```
+
+3.  **Configure o Firebase:**
+    * Crie um projeto no [Console do Firebase](https://console.firebase.google.com/).
+    * Use a FlutterFire CLI para conectar a sua aplicação:
+        ```bash
+        flutterfire configure
+        ```
+    * No console do Firebase, habilite o **Cloud Firestore** e crie a coleção `metas` com o documento `meta_principal`, conforme o passo a passo que seguimos.
+
+4.  **Rode a aplicação:**
+    ```bash
+    flutter run
+    ```
+Com certeza! É o toque final perfeito para um dia de trabalho super produtivo. Ter um README.md atualizado é essencial para mostrar tudo o que o seu projeto é capaz de fazer.
+
+Aqui está o README.md completo e atualizado, refletindo todas as funcionalidades incríveis que construímos juntos.
+
+Instrução: Crie um ficheiro chamado README.md na pasta principal do seu projeto (se ainda não o tiver), ou substitua o conteúdo do ficheiro existente por este código.
+
+Markdown
+
+# 📊 Minhas Finanças App
+
+![Status](https://img.shields.io/badge/status-concluído-brightgreen)
+![Flutter](https://img.shields.io/badge/Framework-Flutter-02569B?logo=flutter)
+![Firebase](https://img.shields.io/badge/Backend-Firebase-FFA000?logo=firebase)
+![Licença](https://img.shields.io/badge/licença-MIT-blue)
+
+Um aplicativo completo de **finanças pessoais** desenvolvido em **Flutter** com integração em tempo real ao **Firebase**. Criado para facilitar o controlo de receitas, despesas, metas de poupança e análise de gastos.
+
+---
+
+## 📸 Screenshots & Demo
+
+<!-- DICA: Grave um GIF ou tire screenshots do seu app em funcionamento e adicione aqui! Mostre a tela principal, o tema escuro e a tela de relatórios. -->
+<p align="center">
+  <img src="URL_DO_SEU_SCREENSHOT_MODO_CLARO.png" alt="Tela Principal - Modo Claro" width="250"/>
+  <img src="URL_DO_SEU_SCREENSHOT_MODO_ESCURO.png" alt="Tela Principal - Modo Escuro" width="250"/>
+  <img src="URL_DO_SEU_SCREENSHOT_GRAFICO.png" alt="Tela de Relatórios" width="250"/>
+</p>
+
+---
+
+## ✨ Funcionalidades
+
+- **Gestão Completa (CRUD):** Crie, leia, edite e apague transações.
+- **Organização por Mês:** Navegue facilmente entre os meses para ver o histórico financeiro.
+- **Painel de Resumo:** Veja o total de receitas, despesas e o saldo do mês selecionado.
+- **Categorias de Despesas:** Classifique as suas despesas (Moradia, Alimentação, etc.) com ícones personalizados.
+- **Lançamentos por Pessoa:** Associe cada transação a uma pessoa (ex: você, sua namorada).
+- **Metas de Poupança:**
+    - Defina uma meta de poupança dinâmica.
+    - Adicione ou retire dinheiro da meta.
+    - Acompanhe o progresso com uma barra visual e percentagem.
+    - Reinicie ou defina novas metas a qualquer momento.
+- **Relatórios Visuais:**
+    - Secção de relatórios com um **gráfico de pizza** interativo.
+    - Analise a distribuição das suas despesas por categoria em cada mês.
+- **Tema Escuro (Dark Mode):**
+    - Adapta-se automaticamente ao tema do sistema.
+    - Botão de controlo manual para alternar entre o modo claro e escuro.
+- **Identidade Visual:** Nome e ícone do aplicativo totalmente personalizados.
+- **Sincronização em Tempo Real:** Todas as informações são salvas e atualizadas instantaneamente com o **Firebase Firestore**.
+
+---
+
+## 🛠️ Tecnologias Utilizadas
+
+- **[Flutter](https://flutter.dev/)**: Framework para desenvolvimento de interfaces de utilizador multiplataforma.
+- **[Dart](https://dart.dev/)**: Linguagem de programação.
+- **[Firebase Firestore](https://firebase.google.com/products/firestore)**: Banco de dados NoSQL para armazenamento de dados em tempo real.
+- **[fl_chart](https://pub.dev/packages/fl_chart)**: Biblioteca para criar gráficos ricos e interativos.
+- **[intl](https://pub.dev/packages/intl)**: Pacote para internacionalização e formatação de datas e moedas.
+- **[flutter_launcher_icons](https://pub.dev/packages/flutter_launcher_icons)**: Ferramenta para gerar os ícones do aplicativo.
+
+---
+
+## 🚀 Como Rodar o Projeto
+
+### **Pré-requisitos**
+
+- Ter o **[Flutter SDK](https://flutter.dev/docs/get-started/install)** instalado.
+- Um editor de código como o **[VS Code](https://code.visualstudio.com/)**.
+- Um emulador Android ou um dispositivo físico.
+
+### **Instalação e Execução**
+
+1.  **Clone o repositório:**
+    ```bash
+    git clone [https://github.com/SEU-USUARIO/SEU-REPOSITORIO.git](https://github.com/SEU-USUARIO/SEU-REPOSITORIO.git)
+    cd SEU-REPOSITORIO
+    ```
+
+2.  **Instale as dependências:**
+    ```bash
+    flutter pub get
+    ```
+
+3.  **Configure o Firebase:**
+    * Crie um projeto no [Console do Firebase](https://console.firebase.google.com/).
+    * Use a FlutterFire CLI para conectar a sua aplicação:
+        ```bash
+        flutterfire configure
+        ```
+    * No console do Firebase, habilite o **Cloud Firestore** e crie a coleção `metas` com o documento `meta_principal`, conforme o passo a passo que seguimos.
+
+4.  **Rode a aplicação:**
+    ```bash
+    flutter run
+    ```
+
+---
+
+# 📂 Estrutura Final do Projeto
+
+```text
+lib/
+  ├── main.dart
+  ├── theme_notifier.dart
+  ├── models/
+  │     └── transaction_model.dart
+  ├── screens/
+  │     ├── add_transaction_screen.dart
+  │     ├── home_screen.dart
+  │     └── reports_screen.dart
+  ├── services/
+  │     └── firestore_service.dart
+  └── widgets/
+        └── main_content.dart
+
 
