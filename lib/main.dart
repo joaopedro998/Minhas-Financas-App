@@ -3,17 +3,13 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter_application_1/screens/home_screen.dart';
-import 'package:flutter_application_1/services/notification_service.dart';
 import 'package:flutter_application_1/theme_notifier.dart';
 import 'firebase_options.dart';
 
-final NotificationService notificationService = NotificationService();
-
+// As linhas do serviço de notificação foram removidas
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  await notificationService.init();
-  // MUDANÇA: Chamamos a nova função que pede todas as permissões
-  await notificationService.requestPermissions();
+  // A inicialização do serviço de notificação foi removida
   await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
   runApp(const MyApp());
 }

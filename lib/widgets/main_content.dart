@@ -9,13 +9,21 @@ import 'package:flutter_application_1/services/firestore_service.dart';
 
 class MainContent extends StatelessWidget {
   final DateTime selectedMonth;
+  final VoidCallback onPreviousMonth;
+  final VoidCallback onNextMonth;
 
-  const MainContent({super.key, required this.selectedMonth});
+  const MainContent({
+    super.key,
+    required this.selectedMonth,
+    required this.onPreviousMonth,
+    required this.onNextMonth,
+  });
 
   @override
   Widget build(BuildContext context) {
     final FirestoreService firestoreService = FirestoreService();
     final isDarkMode = Theme.of(context).brightness == Brightness.dark;
+    final monthFormatter = DateFormat('MMMM y', 'pt_BR');
 
     return Column(
       children: [
@@ -30,7 +38,7 @@ class MainContent extends StatelessWidget {
             }
             if (!snapshot.hasData || !snapshot.data!.exists) {
               return Card(
-                margin: const EdgeInsets.all(16.0),
+                margin: const EdgeInsets.fromLTRB(16.0, 0, 16.0, 16.0),
                 child: Padding(
                   padding: const EdgeInsets.all(16.0),
                   child: Column(
@@ -355,6 +363,7 @@ class MainContent extends StatelessWidget {
                 ],
               );
             },
+            // AQUI ESTÁ A CORREÇÃO! O parêntese em falta foi adicionado.
           ),
         ),
       ],

@@ -56,8 +56,15 @@ class _HomeScreenState extends State<HomeScreen> {
     final isDarkMode = Theme.of(context).brightness == Brightness.dark;
     final monthFormatter = DateFormat('MMMM y', 'pt_BR');
 
+    // AQUI ESTÁ A CORREÇÃO!
+    // Agora passamos as informações necessárias para os nossos widgets.
     final List<Widget> widgetOptions = <Widget>[
-      MainContent(selectedMonth: _selectedMonth),
+      MainContent(
+        selectedMonth: _selectedMonth,
+        onPreviousMonth:
+            _previousMonth, // Passamos a função de ir para o mês anterior
+        onNextMonth: _nextMonth, // Passamos a função de ir para o próximo mês
+      ),
       ReportsScreen(selectedMonth: _selectedMonth),
     ];
 
@@ -79,10 +86,8 @@ class _HomeScreenState extends State<HomeScreen> {
           ),
         ],
       ),
-      // O corpo agora é uma Coluna que contém o seletor de mês e a tela do separador
       body: Column(
         children: [
-          // O SELETOR DE MÊS AGORA VIVE AQUI, FORA DOS SEPARADORES
           Padding(
             padding: const EdgeInsets.symmetric(
               horizontal: 16.0,
@@ -109,7 +114,6 @@ class _HomeScreenState extends State<HomeScreen> {
               ],
             ),
           ),
-          // O Expanded garante que o conteúdo do separador ocupe o resto da tela
           Expanded(
             child: Center(child: widgetOptions.elementAt(_selectedIndex)),
           ),

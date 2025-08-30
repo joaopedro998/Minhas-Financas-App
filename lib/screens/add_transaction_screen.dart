@@ -3,7 +3,6 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:uuid/uuid.dart';
-import 'package:flutter_application_1/main.dart';
 import 'package:flutter_application_1/models/transaction_model.dart';
 import 'package:flutter_application_1/services/firestore_service.dart';
 
@@ -49,7 +48,6 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
     super.initState();
     if (_isEditing) {
       final t = widget.transaction!;
-      // Ao editar, limpamos a descrição da parcela para mostrar o nome original
       _descriptionController.text = t.description.replaceAll(
         RegExp(r'\s\(\d+/\d+\)$'),
         '',
@@ -195,7 +193,6 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
                     ),
                   ),
                   const SizedBox(height: 16),
-                  // O campo de parcelas não aparece no modo de edição para evitar complexidade
                   if (!_isEditing) ...[
                     TextFormField(
                       controller: _installmentsController,
@@ -334,27 +331,7 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
               totalInstallments: installments,
             );
 
-            if (type == 'despesa' &&
-                !_isPaid &&
-                dueDateForInstallment != null) {
-              final notificationDate = DateTime(
-                dueDateForInstallment.year,
-                dueDateForInstallment.month,
-                dueDateForInstallment.day,
-                9,
-              );
-              if (notificationDate.isAfter(DateTime.now())) {
-                await notificationService.scheduleNotification(
-                  id:
-                      transactionDate.millisecondsSinceEpoch.remainder(100000) +
-                      i,
-                  title: 'Conta a Vencer!',
-                  body:
-                      'Não se esqueça de pagar "$installmentDescription" hoje!',
-                  scheduledDate: notificationDate,
-                );
-              }
-            }
+            // A LÓGICA DE NOTIFICAÇÃO FOI REMOVIDA DAQUI
           }
         }
 

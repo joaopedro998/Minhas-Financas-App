@@ -1,11 +1,5 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
-    <!-- Permissão para notificações normais (Android 13+) -->
-    <uses-permission android:name="android.permission.POST_NOTIFICATIONS"/>
-    <!-- Permissão para alarmes exatos (Android 12+) -->
-    <uses-permission android:name="android.permission.SCHEDULE_EXACT_ALARM" />
-    <!-- Permissão necessária para o agendador de alarmes funcionar após o reinício -->
-    <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED"/>
-
+    <!-- As permissões de notificação foram removidas daqui -->
     <application
         android:label="Minhas Finanças"
         android:name="${applicationName}"
