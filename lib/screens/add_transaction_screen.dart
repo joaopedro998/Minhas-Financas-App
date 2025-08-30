@@ -1,8 +1,7 @@
-// lib/screens/add_transaction_screen.dart
-
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:uuid/uuid.dart';
+import 'package:flutter_application_1/main.dart';
 import 'package:flutter_application_1/models/transaction_model.dart';
 import 'package:flutter_application_1/services/firestore_service.dart';
 
@@ -103,6 +102,9 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
         padding: const EdgeInsets.all(16.0),
         child: Form(
           key: _formKey,
+          // AQUI ESTÁ A CORREÇÃO!
+          // O SingleChildScrollView "embrulha" a nossa coluna de campos,
+          // tornando o formulário rolável quando o teclado aparece.
           child: SingleChildScrollView(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -330,8 +332,6 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
               currentInstallment: i + 1,
               totalInstallments: installments,
             );
-
-            // A LÓGICA DE NOTIFICAÇÃO FOI REMOVIDA DAQUI
           }
         }
 

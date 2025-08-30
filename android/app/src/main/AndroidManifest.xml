@@ -1,9 +1,9 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
-    <!-- As permissões de notificação foram removidas daqui -->
+    <!-- As permissões de notificação foram removidas, deixando o ficheiro mais limpo -->
     <application
         android:label="Minhas Finanças"
         android:name="${applicationName}"
-        android:icon="@mipmap/ic_launcher">
+        android:icon="@mipmap/launcher_icon">
         <activity
             android:name=".MainActivity"
             android:exported="true"
