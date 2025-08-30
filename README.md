@@ -9,17 +9,6 @@ Um aplicativo completo de **finanças pessoais** desenvolvido em **Flutter** com
 
 ---
 
-## 📸 Screenshots & Demo
-
-<!-- DICA: Grave um GIF ou tire screenshots do seu app em funcionamento e adicione aqui! Mostre a tela principal, o tema escuro e a tela de relatórios. -->
-<p align="center">
-  <img src="URL_DO_SEU_SCREENSHOT_MODO_CLARO.png" alt="Tela Principal - Modo Claro" width="250"/>
-  <img src="URL_DO_SEU_SCREENSHOT_MODO_ESCURO.png" alt="Tela Principal - Modo Escuro" width="250"/>
-  <img src="URL_DO_SEU_SCREENSHOT_GRAFICO.png" alt="Tela de Relatórios" width="250"/>
-</p>
-
----
-
 ## ✨ Funcionalidades
 
 - **Gestão Completa (CRUD):** Crie, leia, edite e apague transações.
