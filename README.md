@@ -66,8 +66,8 @@ Um aplicativo completo de **finanças pessoais** desenvolvido em **Flutter** com
 
 1.  **Clone o repositório:**
     ```bash
-    git clone [https://github.com/SEU-USUARIO/SEU-REPOSITORIO.git](https://github.com/SEU-USUARIO/SEU-REPOSITORIO.git)
-    cd SEU-REPOSITORIO
+    git clone [https://github.com/joaopedro998/Minhas-Financas-App](https://github.com/joaopedro998/Minhas-Financas-App)
+    cd Minhas-Financas-App
     ```
 
 2.  **Instale as dependências:**
