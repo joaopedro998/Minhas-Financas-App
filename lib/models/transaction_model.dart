@@ -7,7 +7,14 @@ class TransactionModel {
   final String type;
   final Timestamp date;
   final String person;
-  final String category; // NOVO CAMPO
+  final String category;
+  final bool isPaid;
+  final Timestamp? dueDate;
+  // NOVOS CAMPOS PARA PARCELAMENTO
+  final String?
+  installmentId; // Um ID único para agrupar todas as parcelas de uma compra
+  final int? currentInstallment; // A parcela atual (ex: 1, 2, 3...)
+  final int? totalInstallments; // O total de parcelas (ex: 12)
 
   TransactionModel({
     required this.id,
@@ -16,7 +23,12 @@ class TransactionModel {
     required this.type,
     required this.date,
     required this.person,
-    required this.category, // NOVO CAMPO
+    required this.category,
+    required this.isPaid,
+    this.dueDate,
+    this.installmentId,
+    this.currentInstallment,
+    this.totalInstallments,
   });
 
   factory TransactionModel.fromFirestore(DocumentSnapshot doc) {
@@ -28,8 +40,12 @@ class TransactionModel {
       type: data['type'] ?? 'despesa',
       date: data['date'] ?? Timestamp.now(),
       person: data['person'] ?? 'N/A',
-      // Se a transação for antiga e não tiver categoria, definimos como 'Outros'
-      category: data['category'] ?? 'Outros', // NOVO CAMPO
+      category: data['category'] ?? 'Outros',
+      isPaid: data['isPaid'] ?? false,
+      dueDate: data['dueDate'],
+      installmentId: data['installmentId'],
+      currentInstallment: data['currentInstallment'],
+      totalInstallments: data['totalInstallments'],
     );
   }
 }

@@ -1,11 +1,19 @@
+// lib/main.dart
+
 import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter_application_1/screens/home_screen.dart';
-import 'package:flutter_application_1/theme_notifier.dart'; // Importe o nosso novo arquivo
+import 'package:flutter_application_1/services/notification_service.dart';
+import 'package:flutter_application_1/theme_notifier.dart';
 import 'firebase_options.dart';
 
-void main() async {
+final NotificationService notificationService = NotificationService();
+
+Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  await notificationService.init();
+  // MUDANÇA: Chamamos a nova função que pede todas as permissões
+  await notificationService.requestPermissions();
   await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
   runApp(const MyApp());
 }
@@ -15,12 +23,9 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // ValueListenableBuilder é um widget que se reconstrói automaticamente
-    // sempre que o valor do 'themeNotifier' muda.
     return ValueListenableBuilder<ThemeMode>(
       valueListenable: themeNotifier,
       builder: (context, currentMode, child) {
-        // Agora o MaterialApp usa o 'currentMode' que vem do nosso notifier.
         return MaterialApp(
           title: 'Minhas Finanças',
           debugShowCheckedModeBanner: false,
@@ -34,9 +39,8 @@ class MyApp extends StatelessWidget {
             useMaterial3: true,
             brightness: Brightness.dark,
           ),
-          // A mágica acontece aqui!
           themeMode: currentMode,
-          home: const HomeScreen(),
+          home: HomeScreen(),
         );
       },
     );

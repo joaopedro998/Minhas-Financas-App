@@ -1,6 +1,9 @@
 // lib/screens/add_transaction_screen.dart
 
 import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
+import 'package:uuid/uuid.dart';
+import 'package:flutter_application_1/main.dart';
 import 'package:flutter_application_1/models/transaction_model.dart';
 import 'package:flutter_application_1/services/firestore_service.dart';
 
@@ -22,8 +25,12 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
   final _descriptionController = TextEditingController();
   final _amountController = TextEditingController();
   final _personController = TextEditingController();
+  final _installmentsController = TextEditingController();
+
   String _transactionType = 'despesa';
   String? _selectedCategory;
+  bool _isPaid = false;
+  DateTime? _dueDate;
   final FirestoreService _firestoreService = FirestoreService();
   bool get _isEditing => widget.transaction != null;
   final List<String> _categories = [
@@ -42,13 +49,33 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
     super.initState();
     if (_isEditing) {
       final t = widget.transaction!;
-      _descriptionController.text = t.description;
+      // Ao editar, limpamos a descrição da parcela para mostrar o nome original
+      _descriptionController.text = t.description.replaceAll(
+        RegExp(r'\s\(\d+/\d+\)$'),
+        '',
+      );
       _amountController.text = t.amount.toString();
       _personController.text = t.person;
       _transactionType = t.type;
+      _isPaid = t.isPaid;
+      _dueDate = t.dueDate?.toDate();
       if (t.type == 'despesa') {
         _selectedCategory = t.category;
       }
+    }
+  }
+
+  Future<void> _selectDueDate(BuildContext context) async {
+    final DateTime? picked = await showDatePicker(
+      context: context,
+      initialDate: _dueDate ?? DateTime.now(),
+      firstDate: DateTime(2020),
+      lastDate: DateTime(2101),
+    );
+    if (picked != null && picked != _dueDate) {
+      setState(() {
+        _dueDate = picked;
+      });
     }
   }
 
@@ -141,6 +168,45 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
                         value == null ? 'Selecione uma categoria' : null,
                   ),
                   const SizedBox(height: 16),
+                  TextFormField(
+                    controller: TextEditingController(
+                      text: _dueDate == null
+                          ? ''
+                          : DateFormat('dd/MM/yyyy').format(_dueDate!),
+                    ),
+                    readOnly: true,
+                    decoration: InputDecoration(
+                      labelText: 'Data de Vencimento (Opcional)',
+                      border: const OutlineInputBorder(),
+                      suffixIcon: IconButton(
+                        icon: const Icon(Icons.calendar_today),
+                        onPressed: () => _selectDueDate(context),
+                      ),
+                    ),
+                    onTap: () => _selectDueDate(context),
+                  ),
+                  const SizedBox(height: 16),
+                  SwitchListTile(
+                    title: const Text('Esta dívida já foi paga?'),
+                    value: _isPaid,
+                    onChanged: (bool value) => setState(() => _isPaid = value),
+                    secondary: Icon(
+                      _isPaid ? Icons.check_circle : Icons.cancel_outlined,
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+                  // O campo de parcelas não aparece no modo de edição para evitar complexidade
+                  if (!_isEditing) ...[
+                    TextFormField(
+                      controller: _installmentsController,
+                      keyboardType: TextInputType.number,
+                      decoration: const InputDecoration(
+                        labelText: 'Nº de Parcelas (deixe em branco se for 1)',
+                        border: OutlineInputBorder(),
+                      ),
+                    ),
+                    const SizedBox(height: 16),
+                  ],
                 ],
 
                 if (showPersonField) ...[
@@ -162,7 +228,6 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
                     labelText: 'Valor (R\$)',
                     border: OutlineInputBorder(),
                   ),
-                  // AQUI ESTÁ A CORREÇÃO! Trocado '-' por '.'
                   keyboardType: const TextInputType.numberWithOptions(
                     decimal: true,
                   ),
@@ -206,6 +271,7 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
           ? 'N/A'
           : _personController.text;
       final category = type == 'despesa' ? _selectedCategory! : 'N/A';
+      final int installments = int.tryParse(_installmentsController.text) ?? 1;
 
       try {
         if (type == 'guardar') {
@@ -229,31 +295,67 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
             type,
             person,
             category,
-            DateTime.now(),
+            widget.transaction!.date.toDate(),
+            isPaid: _isPaid,
+            dueDate: _dueDate,
           );
         } else {
-          DateTime dateToSave;
-          final now = DateTime.now();
-          if (widget.selectedMonthForNewTransaction != null) {
-            final selected = widget.selectedMonthForNewTransaction!;
-            dateToSave = DateTime(
-              selected.year,
-              selected.month,
-              now.day,
-              now.hour,
-              now.minute,
+          final installmentId = installments > 1 ? const Uuid().v4() : null;
+
+          for (int i = 0; i < installments; i++) {
+            final now = DateTime.now();
+            final selectedMonthBase =
+                widget.selectedMonthForNewTransaction ?? now;
+
+            final transactionDate = DateTime(
+              selectedMonthBase.year,
+              selectedMonthBase.month + i,
+              now.day > 28 ? 28 : now.day,
             );
-          } else {
-            dateToSave = now;
+            final dueDateForInstallment = _dueDate != null
+                ? DateTime(_dueDate!.year, _dueDate!.month + i, _dueDate!.day)
+                : null;
+
+            final installmentDescription = installments > 1
+                ? '$description (${i + 1}/$installments)'
+                : description;
+
+            await _firestoreService.addTransaction(
+              installmentDescription,
+              amount,
+              type,
+              person,
+              category,
+              transactionDate,
+              isPaid: _isPaid,
+              dueDate: dueDateForInstallment,
+              installmentId: installmentId,
+              currentInstallment: i + 1,
+              totalInstallments: installments,
+            );
+
+            if (type == 'despesa' &&
+                !_isPaid &&
+                dueDateForInstallment != null) {
+              final notificationDate = DateTime(
+                dueDateForInstallment.year,
+                dueDateForInstallment.month,
+                dueDateForInstallment.day,
+                9,
+              );
+              if (notificationDate.isAfter(DateTime.now())) {
+                await notificationService.scheduleNotification(
+                  id:
+                      transactionDate.millisecondsSinceEpoch.remainder(100000) +
+                      i,
+                  title: 'Conta a Vencer!',
+                  body:
+                      'Não se esqueça de pagar "$installmentDescription" hoje!',
+                  scheduledDate: notificationDate,
+                );
+              }
+            }
           }
-          await _firestoreService.addTransaction(
-            description,
-            amount,
-            type,
-            person,
-            category,
-            dateToSave,
-          );
         }
 
         if (mounted) {
@@ -277,6 +379,7 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
     _descriptionController.dispose();
     _amountController.dispose();
     _personController.dispose();
+    _installmentsController.dispose();
     super.dispose();
   }
 }

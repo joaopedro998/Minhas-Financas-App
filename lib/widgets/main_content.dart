@@ -3,291 +3,251 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
-import 'package:intl/date_symbol_data_local.dart';
 import 'package:flutter_application_1/models/transaction_model.dart';
 import 'package:flutter_application_1/screens/add_transaction_screen.dart';
 import 'package:flutter_application_1/services/firestore_service.dart';
-import 'package:flutter_application_1/theme_notifier.dart';
 
 class MainContent extends StatelessWidget {
   final DateTime selectedMonth;
-  final VoidCallback onPreviousMonth;
-  final VoidCallback onNextMonth;
 
-  const MainContent({
-    super.key,
-    required this.selectedMonth,
-    required this.onPreviousMonth,
-    required this.onNextMonth,
-  });
+  const MainContent({super.key, required this.selectedMonth});
 
   @override
   Widget build(BuildContext context) {
-    initializeDateFormatting('pt_BR', null);
     final FirestoreService firestoreService = FirestoreService();
     final isDarkMode = Theme.of(context).brightness == Brightness.dark;
-    final monthFormatter = DateFormat('MMMM y', 'pt_BR');
 
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('Minhas Finanças'),
-        backgroundColor: Colors.indigo,
-        elevation: 0,
-        actions: [
-          IconButton(
-            icon: Icon(isDarkMode ? Icons.light_mode : Icons.dark_mode),
-            onPressed: () {
-              themeNotifier.value = isDarkMode
-                  ? ThemeMode.light
-                  : ThemeMode.dark;
-            },
-          ),
-        ],
-      ),
-      body: Column(
-        children: [
-          StreamBuilder<DocumentSnapshot>(
-            stream: firestoreService.getGoalStream(),
-            builder: (context, snapshot) {
-              if (snapshot.connectionState == ConnectionState.waiting) {
-                return const Padding(
-                  padding: EdgeInsets.all(16.0),
-                  child: Center(child: CircularProgressIndicator()),
-                );
-              }
-              if (!snapshot.hasData || !snapshot.data!.exists) {
-                return Card(
-                  margin: const EdgeInsets.all(16.0),
-                  child: Padding(
-                    padding: const EdgeInsets.all(16.0),
-                    child: Column(
-                      children: [
-                        const Text('Nenhuma meta definida ainda.'),
-                        TextButton(
-                          onPressed: () =>
-                              _showSetGoalDialog(context, firestoreService),
-                          child: const Text('DEFINIR UMA META'),
-                        ),
-                      ],
-                    ),
-                  ),
-                );
-              }
-              final goalData = snapshot.data!.data() as Map<String, dynamic>;
-              final valorAtual = (goalData['valorAtual'] ?? 0).toDouble();
-              final valorMeta = (goalData['valorMeta'] ?? 1).toDouble();
-              final progresso = (valorAtual / valorMeta).clamp(0, 1).toDouble();
-              final porcentagem = (progresso * 100).toStringAsFixed(1);
-              final formatadorMoeda = NumberFormat.currency(
-                locale: 'pt_BR',
-                symbol: 'R\$',
+    return Column(
+      children: [
+        StreamBuilder<DocumentSnapshot>(
+          stream: firestoreService.getGoalStream(),
+          builder: (context, snapshot) {
+            if (snapshot.connectionState == ConnectionState.waiting) {
+              return const Padding(
+                padding: EdgeInsets.all(16.0),
+                child: Center(child: CircularProgressIndicator()),
               );
+            }
+            if (!snapshot.hasData || !snapshot.data!.exists) {
               return Card(
                 margin: const EdgeInsets.all(16.0),
-                elevation: 4,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(10),
-                ),
                 child: Padding(
                   padding: const EdgeInsets.all(16.0),
                   child: Column(
                     children: [
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          const Text(
-                            'META DE POUPANÇA',
-                            style: TextStyle(
-                              fontWeight: FontWeight.bold,
-                              fontSize: 16,
-                              color: Colors.blue,
-                            ),
-                          ),
-                          PopupMenuButton<String>(
-                            onSelected: (value) {
-                              if (value == 'nova')
-                                _showSetGoalDialog(context, firestoreService);
-                              else if (value == 'reiniciar')
-                                firestoreService.resetGoalProgress();
-                            },
-                            itemBuilder: (BuildContext context) =>
-                                <PopupMenuEntry<String>>[
-                                  const PopupMenuItem<String>(
-                                    value: 'nova',
-                                    child: Text('Definir Nova Meta'),
-                                  ),
-                                  const PopupMenuItem<String>(
-                                    value: 'reiniciar',
-                                    child: Text('Reiniciar Progresso'),
-                                  ),
-                                ],
-                            child: const Icon(Icons.more_vert),
-                          ),
-                        ],
-                      ),
-                      const SizedBox(height: 8),
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          Text(
-                            formatadorMoeda.format(valorAtual),
-                            style: const TextStyle(fontSize: 18),
-                          ),
-                          Text(
-                            formatadorMoeda.format(valorMeta),
-                            style: const TextStyle(color: Colors.grey),
-                          ),
-                        ],
-                      ),
-                      const SizedBox(height: 8),
-                      LinearProgressIndicator(
-                        value: progresso,
-                        minHeight: 10,
-                        borderRadius: BorderRadius.circular(5),
-                      ),
-                      const SizedBox(height: 4),
-                      Align(
-                        alignment: Alignment.centerRight,
-                        child: Text(
-                          '$porcentagem% atingido',
-                          style: const TextStyle(color: Colors.grey),
-                        ),
+                      const Text('Nenhuma meta definida ainda.'),
+                      TextButton(
+                        onPressed: () =>
+                            _showSetGoalDialog(context, firestoreService),
+                        child: const Text('DEFINIR UMA META'),
                       ),
                     ],
                   ),
                 ),
               );
-            },
-          ),
-          Padding(
-            padding: const EdgeInsets.symmetric(
-              horizontal: 16.0,
-              vertical: 8.0,
-            ),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                IconButton(
-                  icon: const Icon(Icons.chevron_left),
-                  onPressed: onPreviousMonth,
-                ),
-                Text(
-                  monthFormatter.format(selectedMonth).toUpperCase(),
-                  style: const TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-                IconButton(
-                  icon: const Icon(Icons.chevron_right),
-                  onPressed: onNextMonth,
-                ),
-              ],
-            ),
-          ),
-          Expanded(
-            child: StreamBuilder<QuerySnapshot>(
-              stream: firestoreService.getTransactionsStreamByMonth(
-                selectedMonth,
+            }
+            final goalData = snapshot.data!.data() as Map<String, dynamic>;
+            final valorAtual = (goalData['valorAtual'] ?? 0).toDouble();
+            final valorMeta = (goalData['valorMeta'] ?? 1).toDouble();
+            final progresso = (valorAtual / valorMeta).clamp(0, 1).toDouble();
+            final porcentagem = (progresso * 100).toStringAsFixed(1);
+            final formatadorMoeda = NumberFormat.currency(
+              locale: 'pt_BR',
+              symbol: 'R\$',
+            );
+            return Card(
+              margin: const EdgeInsets.fromLTRB(16.0, 0, 16.0, 16.0),
+              elevation: 4,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(10),
               ),
-              builder: (context, snapshot) {
-                if (snapshot.connectionState == ConnectionState.waiting)
-                  return const Center(child: CircularProgressIndicator());
-                if (!snapshot.hasData || snapshot.data!.docs.isEmpty)
-                  return Center(
-                    child: Text(
-                      'Nenhuma transação neste mês.',
-                      style: TextStyle(color: Colors.grey, fontSize: 16),
-                    ),
-                  );
-                final transactionsDocs = snapshot.data!.docs;
-                double totalRevenue = 0.0;
-                double totalExpenses = 0.0;
-                for (var doc in transactionsDocs) {
-                  final transaction = TransactionModel.fromFirestore(doc);
-                  if (transaction.type == 'receita')
-                    totalRevenue += transaction.amount;
-                  else if (transaction.type == 'despesa')
-                    totalExpenses += transaction.amount;
-                }
-                final balance = totalRevenue - totalExpenses;
-                final formatadorMoeda = NumberFormat.currency(
-                  locale: 'pt_BR',
-                  symbol: 'R\$',
-                );
-                return Column(
+              child: Padding(
+                padding: const EdgeInsets.all(16.0),
+                child: Column(
                   children: [
-                    Card(
-                      margin: const EdgeInsets.symmetric(
-                        horizontal: 16.0,
-                        vertical: 8.0,
-                      ),
-                      elevation: 4,
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(10),
-                      ),
-                      child: Padding(
-                        padding: const EdgeInsets.all(16.0),
-                        child: Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceAround,
-                          children: [
-                            _buildSummaryItem(
-                              Icons.arrow_upward,
-                              "Receitas",
-                              formatadorMoeda.format(totalRevenue),
-                              Colors.green,
-                            ),
-                            _buildSummaryItem(
-                              Icons.arrow_downward,
-                              "Despesas",
-                              formatadorMoeda.format(totalExpenses),
-                              Colors.red,
-                            ),
-                            _buildSummaryItem(
-                              Icons.account_balance_wallet,
-                              "Saldo",
-                              formatadorMoeda.format(balance),
-                              Colors.indigo,
-                            ),
-                          ],
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        const Text(
+                          'META DE POUPANÇA',
+                          style: TextStyle(
+                            fontWeight: FontWeight.bold,
+                            fontSize: 16,
+                            color: Colors.blue,
+                          ),
                         ),
+                        PopupMenuButton<String>(
+                          onSelected: (value) {
+                            if (value == 'nova')
+                              _showSetGoalDialog(context, firestoreService);
+                            else if (value == 'reiniciar')
+                              firestoreService.resetGoalProgress();
+                          },
+                          itemBuilder: (BuildContext context) =>
+                              <PopupMenuEntry<String>>[
+                                const PopupMenuItem<String>(
+                                  value: 'nova',
+                                  child: Text('Definir Nova Meta'),
+                                ),
+                                const PopupMenuItem<String>(
+                                  value: 'reiniciar',
+                                  child: Text('Reiniciar Progresso'),
+                                ),
+                              ],
+                          child: const Icon(Icons.more_vert),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 8),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Text(
+                          formatadorMoeda.format(valorAtual),
+                          style: const TextStyle(fontSize: 18),
+                        ),
+                        Text(
+                          formatadorMoeda.format(valorMeta),
+                          style: const TextStyle(color: Colors.grey),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 8),
+                    LinearProgressIndicator(
+                      value: progresso,
+                      minHeight: 10,
+                      borderRadius: BorderRadius.circular(5),
+                    ),
+                    const SizedBox(height: 4),
+                    Align(
+                      alignment: Alignment.centerRight,
+                      child: Text(
+                        '$porcentagem% atingido',
+                        style: const TextStyle(color: Colors.grey),
                       ),
                     ),
-                    Padding(
-                      padding: const EdgeInsets.only(
-                        left: 20.0,
-                        top: 10.0,
-                        bottom: 5.0,
-                      ),
+                  ],
+                ),
+              ),
+            );
+          },
+        ),
+        Expanded(
+          child: StreamBuilder<QuerySnapshot>(
+            stream: firestoreService.getTransactionsStreamByMonth(
+              selectedMonth,
+            ),
+            builder: (context, snapshot) {
+              if (snapshot.connectionState == ConnectionState.waiting)
+                return const Center(child: CircularProgressIndicator());
+              if (!snapshot.hasData || snapshot.data!.docs.isEmpty)
+                return Center(
+                  child: Text(
+                    'Nenhuma transação neste mês.',
+                    style: TextStyle(color: Colors.grey, fontSize: 16),
+                  ),
+                );
+              final transactionsDocs = snapshot.data!.docs;
+              double totalRevenue = 0.0;
+              double totalExpenses = 0.0;
+              for (var doc in transactionsDocs) {
+                final transaction = TransactionModel.fromFirestore(doc);
+                if (transaction.type == 'receita') {
+                  totalRevenue += transaction.amount;
+                } else if (transaction.type == 'despesa') {
+                  if (transaction.isPaid) {
+                    totalExpenses += transaction.amount;
+                  }
+                }
+              }
+              final balance = totalRevenue - totalExpenses;
+              final formatadorMoeda = NumberFormat.currency(
+                locale: 'pt_BR',
+                symbol: 'R\$',
+              );
+              return Column(
+                children: [
+                  Card(
+                    margin: const EdgeInsets.symmetric(
+                      horizontal: 16.0,
+                      vertical: 8.0,
+                    ),
+                    elevation: 4,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                    child: Padding(
+                      padding: const EdgeInsets.all(16.0),
                       child: Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceAround,
                         children: [
-                          Text(
-                            "Histórico do Mês",
-                            style: TextStyle(
-                              fontSize: 18,
-                              fontWeight: FontWeight.bold,
-                              color: isDarkMode
-                                  ? Colors.white70
-                                  : Colors.black54,
-                            ),
+                          _buildSummaryItem(
+                            Icons.arrow_upward,
+                            "Receitas",
+                            formatadorMoeda.format(totalRevenue),
+                            Colors.green,
+                          ),
+                          _buildSummaryItem(
+                            Icons.arrow_downward,
+                            "Despesas Pagas",
+                            formatadorMoeda.format(totalExpenses),
+                            Colors.red,
+                          ),
+                          _buildSummaryItem(
+                            Icons.account_balance_wallet,
+                            "Saldo",
+                            formatadorMoeda.format(balance),
+                            Colors.indigo,
                           ),
                         ],
                       ),
                     ),
-                    Expanded(
-                      child: ListView.builder(
-                        itemCount: transactionsDocs.length,
-                        itemBuilder: (context, index) {
-                          final transaction = TransactionModel.fromFirestore(
-                            transactionsDocs[index],
+                  ),
+                  Padding(
+                    padding: const EdgeInsets.only(
+                      left: 20.0,
+                      top: 10.0,
+                      bottom: 5.0,
+                    ),
+                    child: Row(
+                      children: [
+                        Text(
+                          "Histórico do Mês",
+                          style: TextStyle(
+                            fontSize: 18,
+                            fontWeight: FontWeight.bold,
+                            color: isDarkMode ? Colors.white70 : Colors.black54,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  Expanded(
+                    child: ListView.builder(
+                      itemCount: transactionsDocs.length,
+                      itemBuilder: (context, index) {
+                        final transaction = TransactionModel.fromFirestore(
+                          transactionsDocs[index],
+                        );
+                        final isRevenue = transaction.type == 'receita';
+                        final isExpense = transaction.type == 'despesa';
+                        bool isOverdue = false;
+                        if (transaction.dueDate != null &&
+                            !transaction.isPaid) {
+                          isOverdue = transaction.dueDate!.toDate().isBefore(
+                            DateTime.now(),
                           );
-                          final isRevenue = transaction.type == 'receita';
-                          IconData categoryIcon = _getIconForCategory(
-                            transaction.category,
-                          );
-                          return Dismissible(
-                            key: Key(transaction.id),
-                            onDismissed: (direction) {
+                        }
+                        return Dismissible(
+                          key: Key(transaction.id),
+                          onDismissed: (direction) {
+                            if (transaction.installmentId != null) {
+                              _showDeleteInstallmentDialog(
+                                context,
+                                firestoreService,
+                                transaction,
+                              );
+                            } else {
                               firestoreService.deleteTransaction(
                                 transaction.id,
                               );
@@ -298,76 +258,106 @@ class MainContent extends StatelessWidget {
                                   ),
                                 ),
                               );
-                            },
-                            background: Container(
-                              color: Colors.red,
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 20,
-                              ),
-                              alignment: Alignment.centerRight,
-                              child: const Icon(
-                                Icons.delete,
-                                color: Colors.white,
-                              ),
+                            }
+                          },
+                          background: Container(
+                            color: Colors.red,
+                            padding: const EdgeInsets.symmetric(horizontal: 20),
+                            alignment: Alignment.centerRight,
+                            child: const Icon(
+                              Icons.delete,
+                              color: Colors.white,
                             ),
-                            child: Card(
-                              margin: const EdgeInsets.symmetric(
-                                horizontal: 16.0,
-                                vertical: 6.0,
-                              ),
-                              child: ListTile(
-                                onTap: () => Navigator.push(
-                                  context,
-                                  MaterialPageRoute(
-                                    builder: (context) => AddTransactionScreen(
-                                      transaction: transaction,
+                          ),
+                          child: Card(
+                            shape: isOverdue
+                                ? RoundedRectangleBorder(
+                                    side: const BorderSide(
+                                      color: Colors.red,
+                                      width: 2,
                                     ),
-                                  ),
-                                ),
-                                leading: CircleAvatar(
-                                  backgroundColor:
-                                      (isRevenue ? Colors.green : Colors.red)
-                                          .withOpacity(0.1),
-                                  child: Icon(
-                                    isRevenue
-                                        ? Icons.arrow_upward
-                                        : categoryIcon,
-                                    color: isRevenue
-                                        ? Colors.green
-                                        : Colors.red,
-                                  ),
-                                ),
-                                title: Text(
-                                  transaction.description,
-                                  style: const TextStyle(
-                                    fontWeight: FontWeight.bold,
-                                  ),
-                                ),
-                                subtitle: Text(
-                                  '${transaction.person} • ${transaction.category}',
-                                ),
-                                trailing: Text(
-                                  formatadorMoeda.format(transaction.amount),
-                                  style: TextStyle(
-                                    fontWeight: FontWeight.bold,
-                                    color: isRevenue
-                                        ? Colors.green
-                                        : Colors.red,
+                                    borderRadius: BorderRadius.circular(12),
+                                  )
+                                : null,
+                            margin: const EdgeInsets.symmetric(
+                              horizontal: 16.0,
+                              vertical: 6.0,
+                            ),
+                            child: ListTile(
+                              onTap: () => Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (context) => AddTransactionScreen(
+                                    transaction: transaction,
                                   ),
                                 ),
                               ),
+                              leading: isExpense
+                                  ? Checkbox(
+                                      value: transaction.isPaid,
+                                      onChanged: (bool? value) {
+                                        firestoreService.togglePaidStatus(
+                                          transaction.id,
+                                          transaction.isPaid,
+                                        );
+                                      },
+                                      activeColor: Colors.green,
+                                    )
+                                  : CircleAvatar(
+                                      backgroundColor: Colors.green.withOpacity(
+                                        0.1,
+                                      ),
+                                      child: const Icon(
+                                        Icons.arrow_upward,
+                                        color: Colors.green,
+                                      ),
+                                    ),
+                              title: Text(
+                                transaction.description,
+                                style: TextStyle(
+                                  fontWeight: FontWeight.bold,
+                                  decoration: transaction.isPaid
+                                      ? TextDecoration.lineThrough
+                                      : TextDecoration.none,
+                                ),
+                              ),
+                              subtitle: transaction.dueDate != null
+                                  ? Text(
+                                      'Vence em: ${DateFormat('dd/MM/yyyy').format(transaction.dueDate!.toDate())}',
+                                      style: TextStyle(
+                                        color: isOverdue
+                                            ? Colors.red
+                                            : Colors.grey,
+                                        fontWeight: isOverdue
+                                            ? FontWeight.bold
+                                            : FontWeight.normal,
+                                      ),
+                                    )
+                                  : Text(
+                                      '${transaction.person} • ${transaction.category}',
+                                    ),
+                              trailing: Text(
+                                formatadorMoeda.format(transaction.amount),
+                                style: TextStyle(
+                                  fontWeight: FontWeight.bold,
+                                  color: isRevenue ? Colors.green : Colors.red,
+                                  decoration: transaction.isPaid
+                                      ? TextDecoration.lineThrough
+                                      : TextDecoration.none,
+                                ),
+                              ),
                             ),
-                          );
-                        },
-                      ),
+                          ),
+                        );
+                      },
                     ),
-                  ],
-                );
-              },
-            ),
+                  ),
+                ],
+              );
+            },
           ),
-        ],
-      ),
+        ),
+      ],
     );
   }
 
@@ -468,6 +458,56 @@ class MainContent extends StatelessWidget {
                 }
               },
               child: const Text("Salvar"),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  void _showDeleteInstallmentDialog(
+    BuildContext context,
+    FirestoreService firestoreService,
+    TransactionModel transaction,
+  ) {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: const Text("Excluir Parcela"),
+          content: const Text(
+            "Esta transação faz parte de um parcelamento. Deseja excluir apenas esta parcela ou todas as parcelas?",
+          ),
+          actions: <Widget>[
+            TextButton(
+              child: const Text("Cancelar"),
+              onPressed: () => Navigator.of(context).pop(),
+            ),
+            TextButton(
+              child: const Text("Excluir Somente Esta"),
+              onPressed: () {
+                firestoreService.deleteTransaction(transaction.id);
+                Navigator.of(context).pop();
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(
+                    content: Text("${transaction.description} deletado(a)."),
+                  ),
+                );
+              },
+            ),
+            ElevatedButton(
+              child: const Text("Excluir Todas"),
+              onPressed: () {
+                firestoreService.deleteInstallmentGroup(
+                  transaction.installmentId!,
+                );
+                Navigator.of(context).pop();
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(
+                    content: Text("Todo o parcelamento foi deletado."),
+                  ),
+                );
+              },
             ),
           ],
         );

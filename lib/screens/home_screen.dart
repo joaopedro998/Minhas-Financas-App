@@ -1,9 +1,12 @@
 // lib/screens/home_screen.dart
 
 import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
+import 'package:intl/date_symbol_data_local.dart';
 import 'package:flutter_application_1/screens/add_transaction_screen.dart';
 import 'package:flutter_application_1/screens/reports_screen.dart';
 import 'package:flutter_application_1/widgets/main_content.dart';
+import 'package:flutter_application_1/theme_notifier.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -15,6 +18,12 @@ class HomeScreen extends StatefulWidget {
 class _HomeScreenState extends State<HomeScreen> {
   int _selectedIndex = 0;
   DateTime _selectedMonth = DateTime.now();
+
+  @override
+  void initState() {
+    super.initState();
+    initializeDateFormatting('pt_BR', null);
+  }
 
   void _onItemTapped(int index) {
     setState(() {
@@ -44,17 +53,68 @@ class _HomeScreenState extends State<HomeScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final isDarkMode = Theme.of(context).brightness == Brightness.dark;
+    final monthFormatter = DateFormat('MMMM y', 'pt_BR');
+
     final List<Widget> widgetOptions = <Widget>[
-      MainContent(
-        selectedMonth: _selectedMonth,
-        onPreviousMonth: _previousMonth,
-        onNextMonth: _nextMonth,
-      ),
-      const ReportsScreen(),
+      MainContent(selectedMonth: _selectedMonth),
+      ReportsScreen(selectedMonth: _selectedMonth),
     ];
 
     return Scaffold(
-      body: Center(child: widgetOptions.elementAt(_selectedIndex)),
+      appBar: AppBar(
+        title: Text(
+          _selectedIndex == 0 ? 'Resumo Mensal' : 'Relatório de Despesas',
+        ),
+        backgroundColor: _selectedIndex == 0 ? Colors.indigo : Colors.teal,
+        elevation: 0,
+        actions: [
+          IconButton(
+            icon: Icon(isDarkMode ? Icons.light_mode : Icons.dark_mode),
+            onPressed: () {
+              themeNotifier.value = isDarkMode
+                  ? ThemeMode.light
+                  : ThemeMode.dark;
+            },
+          ),
+        ],
+      ),
+      // O corpo agora é uma Coluna que contém o seletor de mês e a tela do separador
+      body: Column(
+        children: [
+          // O SELETOR DE MÊS AGORA VIVE AQUI, FORA DOS SEPARADORES
+          Padding(
+            padding: const EdgeInsets.symmetric(
+              horizontal: 16.0,
+              vertical: 8.0,
+            ),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                IconButton(
+                  icon: const Icon(Icons.chevron_left),
+                  onPressed: _previousMonth,
+                ),
+                Text(
+                  monthFormatter.format(_selectedMonth).toUpperCase(),
+                  style: const TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                IconButton(
+                  icon: const Icon(Icons.chevron_right),
+                  onPressed: _nextMonth,
+                ),
+              ],
+            ),
+          ),
+          // O Expanded garante que o conteúdo do separador ocupe o resto da tela
+          Expanded(
+            child: Center(child: widgetOptions.elementAt(_selectedIndex)),
+          ),
+        ],
+      ),
       bottomNavigationBar: BottomNavigationBar(
         items: const <BottomNavigationBarItem>[
           BottomNavigationBarItem(icon: Icon(Icons.home), label: 'Início'),
